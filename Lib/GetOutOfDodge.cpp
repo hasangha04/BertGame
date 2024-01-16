@@ -9,15 +9,17 @@
 
 // Application Variables
 
-int		winWidth = 1200, winHeight = 600;
+int		winWidth = 1523, winHeight = 472;
 
 Sprite	background;
 Sprite  sun;
-string  sunImage = "C:/Users/hasan/OneDrive/Desktop/University/Winter 2024/Graphics/Apps/Sun.png";
-string	scrollImage = "C:/Users/hasan/OneDrive/Desktop/University/Winter 2024/Graphics/Apps/Clouds.png";
+Sprite  heart;
+string  heartImage = "Heart.png";
+string  sunImage = "Sun.png";
+string	scrollImage = "Clouds.png";
 bool	scrolling = true, vertically = false;
 
-float	loopDuration = 10, accumulatedVTime = 0, accumulatedHTime = 0;
+float	loopDuration = 40, accumulatedVTime = 0, accumulatedHTime = 0;
 time_t	scrollTime = clock();
 
 // Display
@@ -40,6 +42,7 @@ void Display() {
 	glDisable(GL_DEPTH_TEST);
 	background.Display();
 	sun.Display();
+	heart.Display();
 	glFlush();
 }
 
@@ -55,10 +58,14 @@ int main(int ac, char **av) {
 	GLFWwindow *w = InitGLFW(100, 100, winWidth, winHeight, "Dodge!!");
 	background.Initialize(scrollImage, .7f);
 	sun.compensateAspectRatio = true;
+	heart.compensateAspectRatio = true;
 	background.compensateAspectRatio = true;
 	sun.Initialize(sunImage, .8f);
 	sun.SetScale(vec2(0.3f, 0.3f));
 	sun.SetPosition(vec2(0.92f, 0.82f));
+	heart.Initialize(heartImage, 0.9f);
+	heart.SetScale(vec2(0.05f, 0.05f));
+	heart.SetPosition(vec2(-0.97f, 0.9f));
 	// callbacks
 	RegisterResize(Resize);
 	// event loop
