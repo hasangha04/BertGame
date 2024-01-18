@@ -9,7 +9,7 @@
 
 // Application Variables
 
-int		winWidth = 1523, winHeight = 472;
+int		winWidth = 1522, winHeight = 790;
 
 Sprite	background;
 Sprite  sun;
