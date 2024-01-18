@@ -68,11 +68,11 @@ void initializeHearts() {
 
 	heart2.Initialize(heartImage, 0.9f);
 	heart2.SetScale(vec2(0.05f, 0.05f));
-	heart2.SetPosition(vec2(-0.93f, 0.9f));
+	heart2.SetPosition(vec2(-0.91f, 0.9f));
 
 	heart3.Initialize(heartImage, 0.9f);
 	heart3.SetScale(vec2(0.05f, 0.05f));
-	heart3.SetPosition(vec2(-0.89f, 0.9f));
+	heart3.SetPosition(vec2(-0.85f, 0.9f));
 }
 
 int main(int ac, char** av) {
@@ -83,7 +83,7 @@ int main(int ac, char** av) {
 	//heart.compensateAspectRatio = true;
 	background.compensateAspectRatio = true;
 	sun.Initialize(sunImage, .8f);
-	sun.SetScale(vec2(0.3f, 0.3f));
+	sun.SetScale(vec2(0.3f, 0.28f));
 	sun.SetPosition(vec2(0.92f, 0.82f));
 	initializeHearts();
 	// callbacks
