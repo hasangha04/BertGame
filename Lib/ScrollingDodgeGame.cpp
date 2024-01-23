@@ -1,4 +1,4 @@
-// 10-Demo-ScrollingSprite.cpp
+// GetOutOfDodge.cpp
 
 #include <glad.h>
 #include <GLFW/glfw3.h>
@@ -80,7 +80,6 @@ int main(int ac, char** av) {
 	GLFWwindow* w = InitGLFW(100, 100, winWidth, winHeight, "Dodge!!");
 	background.Initialize(scrollImage, .7f);
 	sun.compensateAspectRatio = true;
-	//heart.compensateAspectRatio = true;
 	background.compensateAspectRatio = true;
 	sun.Initialize(sunImage, .8f);
 	sun.SetScale(vec2(0.3f, 0.28f));
