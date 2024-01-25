@@ -45,16 +45,16 @@ void ScrollClouds() {
 
 // Scrolling Ground
 
-float	loopDurationGround = 20, accumulatedTimeGround = 0;
-//time_t	scrollTime = clock();
+float	loopDurationGround = 8, accumulatedTimeGround = 0;
+time_t	scrollTimeGround = clock();
 
 void ScrollGround() {
 	time_t now = clock();
 	if (scrolling) {
-		float dt = (float)(now - scrollTime) / CLOCKS_PER_SEC;
+		float dt = (float)(now - scrollTimeGround) / CLOCKS_PER_SEC;
 		accumulatedTimeGround += dt;
 	}
-	scrollTime = now;
+	scrollTimeGround = now;
 	float u = accumulatedTimeGround / loopDurationGround;
 	ground.uvTransform = Translate(u, 0, 0);
 }
@@ -128,6 +128,7 @@ int main(int ac, char** av) {
 	// event loop
 	while (!glfwWindowShouldClose(w)) {
 		ScrollClouds();
+		ScrollGround();
 		Display();
 		glfwSwapBuffers(w);
 		glfwPollEvents();
