@@ -71,6 +71,7 @@ void Display() {
 	heart1.Display();
 	heart2.Display();
 	heart3.Display();
+	//freezeClock.Display();
 	bertNeutral.Display();
 	//ground.Display();
 	glFlush();
@@ -109,6 +110,7 @@ int main(int ac, char** av) {
 	sun.compensateAspectRatio = true;
 	clouds.compensateAspectRatio = true;
 	bertNeutral.compensateAspectRatio = true;
+	ground.compensateAspectRatio = true;
 	sun.Initialize(sunImage, .8f);
 	sun.SetScale(vec2(0.3f, 0.28f));
 	sun.SetPosition(vec2(0.92f, 0.82f));
