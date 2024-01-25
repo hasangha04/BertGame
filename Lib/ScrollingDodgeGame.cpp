@@ -13,48 +13,67 @@
 
 int		winWidth = 1522, winHeight = 790;
 
-Sprite	background;
+Sprite	clouds;
 Sprite  sun;
 Sprite  heart1;
 Sprite  heart2;
 Sprite  heart3;
 Sprite  freezeClock;
 Sprite  bertNeutral;
+Sprite  ground;
+string  groundImage = "Ground.png";
 string  bertNeutralImage = "Bert-neutral.png";
 string  clockImage = "Clock.png";
 string  heartImage = "Heart.png";
 string  sunImage = "Sun.png";
-string	scrollImage = "Clouds.png";
-bool	scrolling = true, vertically = false;
+string	cloudsImage = "Clouds.png";
+bool	scrolling = false;
 
-float	loopDuration = 40, accumulatedVTime = 0, accumulatedHTime = 0;
+// Scrolling Clouds
+
+float	loopDurationClouds = 40, accumulatedTimeClouds = 0;
 time_t	scrollTime = clock();
 
-// Display
+void ScrollClouds() {
+	time_t now = clock();
+	float dt = (float)(now - scrollTime) / CLOCKS_PER_SEC;
+	accumulatedTimeClouds += dt;
+	scrollTime = now;
+	float u = accumulatedTimeClouds / loopDurationClouds;
+	clouds.uvTransform = Translate(u, 0, 0);
+}
 
-void Scroll() {
+// Scrolling Ground
+
+float	loopDurationGround = 0, accumulatedTimeGround = 0;
+//time_t	scrollTime = clock();
+
+void ScrollGround() {
 	time_t now = clock();
 	if (scrolling) {
 		float dt = (float)(now - scrollTime) / CLOCKS_PER_SEC;
-		(vertically ? accumulatedVTime : accumulatedHTime) += dt;
+		accumulatedTimeGround += dt;
 	}
 	scrollTime = now;
-	float v = accumulatedVTime / loopDuration, u = accumulatedHTime / loopDuration;
-	background.uvTransform = Translate(u, v, 0);
+	float u = accumulatedTimeGround / loopDurationGround;
+	clouds.uvTransform = Translate(u, 0, 0);
 }
+
+// Display
 
 void Display() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
-	background.Display();
+	clouds.Display();
 	sun.Display();
 	heart1.Display();
 	heart2.Display();
 	heart3.Display();
 	//freezeClock.Display();
 	//bertNeutral.Display();
+	//ground.Display();
 	glFlush();
 }
 
@@ -86,10 +105,10 @@ void initializeHearts() {
 int main(int ac, char** av) {
 	// init app window and GL context
 	GLFWwindow* w = InitGLFW(100, 100, winWidth, winHeight, "Dodge!!");
-	background.Initialize(scrollImage, .7f);
+	clouds.Initialize(cloudsImage, .7f);
 	freezeClock.compensateAspectRatio = true;
 	sun.compensateAspectRatio = true;
-	background.compensateAspectRatio = true;
+	clouds.compensateAspectRatio = true;
 	bertNeutral.compensateAspectRatio = true;
 	sun.Initialize(sunImage, .8f);
 	sun.SetScale(vec2(0.3f, 0.28f));
@@ -98,11 +117,12 @@ int main(int ac, char** av) {
 	freezeClock.Initialize(clockImage, 0.9f);
 	freezeClock.SetScale(vec2(0.075f, 0.075f));
 	bertNeutral.Initialize(bertNeutralImage, 0.9f);
+	//ground.Initialize(groundImage, 0.9f);
 	// callbacks
 	RegisterResize(Resize);
 	// event loop
 	while (!glfwWindowShouldClose(w)) {
-		Scroll();
+		ScrollClouds();
 		Display();
 		glfwSwapBuffers(w);
 		glfwPollEvents();
