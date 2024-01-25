@@ -39,7 +39,7 @@
     <ClCompile Include="..\Lib\Quaternion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Lib\GetOutOfDodge.cpp">
+    <ClCompile Include="..\Lib\ScrollingDodgeGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Lib\Sprite.cpp">

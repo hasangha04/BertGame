@@ -1,4 +1,6 @@
-// GetOutOfDodge.cpp
+// ScrollingDodgeGame.cpp
+
+// Main file for 2D side-scrolling dodge game. Main character: Bert
 
 #include <glad.h>
 #include <GLFW/glfw3.h>
@@ -14,8 +16,12 @@ int		winWidth = 1522, winHeight = 790;
 Sprite	background;
 Sprite  sun;
 Sprite  heart1;
-Sprite heart2;
-Sprite heart3;
+Sprite  heart2;
+Sprite  heart3;
+Sprite  freezeClock;
+Sprite  bertNeutral;
+string  bertNeutralImage = "Bert-neutral.png";
+string  clockImage = "Clock.png";
 string  heartImage = "Heart.png";
 string  sunImage = "Sun.png";
 string	scrollImage = "Clouds.png";
@@ -47,6 +53,8 @@ void Display() {
 	heart1.Display();
 	heart2.Display();
 	heart3.Display();
+	//freezeClock.Display();
+	//bertNeutral.Display();
 	glFlush();
 }
 
@@ -79,12 +87,17 @@ int main(int ac, char** av) {
 	// init app window and GL context
 	GLFWwindow* w = InitGLFW(100, 100, winWidth, winHeight, "Dodge!!");
 	background.Initialize(scrollImage, .7f);
+	freezeClock.compensateAspectRatio = true;
 	sun.compensateAspectRatio = true;
 	background.compensateAspectRatio = true;
+	bertNeutral.compensateAspectRatio = true;
 	sun.Initialize(sunImage, .8f);
 	sun.SetScale(vec2(0.3f, 0.28f));
 	sun.SetPosition(vec2(0.92f, 0.82f));
 	initializeHearts();
+	freezeClock.Initialize(clockImage, 0.9f);
+	freezeClock.SetScale(vec2(0.075f, 0.075f));
+	bertNeutral.Initialize(bertNeutralImage, 0.9f);
 	// callbacks
 	RegisterResize(Resize);
 	// event loop
