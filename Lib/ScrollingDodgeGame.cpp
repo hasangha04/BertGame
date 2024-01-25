@@ -45,7 +45,7 @@ void ScrollClouds() {
 
 // Scrolling Ground
 
-float	loopDurationGround = 0, accumulatedTimeGround = 0;
+float	loopDurationGround = 20, accumulatedTimeGround = 0;
 //time_t	scrollTime = clock();
 
 void ScrollGround() {
@@ -56,7 +56,7 @@ void ScrollGround() {
 	}
 	scrollTime = now;
 	float u = accumulatedTimeGround / loopDurationGround;
-	clouds.uvTransform = Translate(u, 0, 0);
+	ground.uvTransform = Translate(u, 0, 0);
 }
 
 // Display
