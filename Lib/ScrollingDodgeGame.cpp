@@ -14,8 +14,10 @@ int		winWidth = 1522, winHeight = 790;
 Sprite	background;
 Sprite  sun;
 Sprite  heart1;
-Sprite heart2;
-Sprite heart3;
+Sprite  heart2;
+Sprite  heart3;
+Sprite  ground;
+string  groundImage = "Ground.png";
 string  heartImage = "Heart.png";
 string  sunImage = "Sun.png";
 string	scrollImage = "Clouds.png";
@@ -47,6 +49,7 @@ void Display() {
 	heart1.Display();
 	heart2.Display();
 	heart3.Display();
+	ground.Display();
 	glFlush();
 }
 
@@ -81,6 +84,10 @@ int main(int ac, char** av) {
 	background.Initialize(scrollImage, .7f);
 	sun.compensateAspectRatio = true;
 	background.compensateAspectRatio = true;
+	//ground.compensateAspectRatio = true;
+	ground.SetScale(vec2(1.0f, 0.40f));
+	ground.SetPosition(vec2(-0.0f, -0.61f));
+	ground.Initialize(groundImage, .7f);
 	sun.Initialize(sunImage, .8f);
 	sun.SetScale(vec2(0.3f, 0.28f));
 	sun.SetPosition(vec2(0.92f, 0.82f));
