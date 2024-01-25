@@ -119,7 +119,7 @@ int main(int ac, char** av) {
 	freezeClock.SetScale(vec2(0.075f, 0.075f));
 	bertNeutral.Initialize(bertNeutralImage, 0.9f);
 	bertNeutral.SetScale(vec2(0.12f, 0.12f));
-	bertNeutral.SetPosition(vec2(-0.7f, -0.395f));
+	bertNeutral.SetPosition(vec2(-0.5f, -0.395f));
 	ground.Initialize(groundImage, 0.9f);
 	ground.SetScale(vec2(2.0f, 0.25f));
 	ground.SetPosition(vec2(0.0f, -0.75f));
