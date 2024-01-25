@@ -31,7 +31,7 @@ bool	scrolling = false;
 
 // Scrolling Clouds
 
-float	loopDurationClouds = 40, accumulatedTimeClouds = 0;
+float	loopDurationClouds = 60, accumulatedTimeClouds = 0;
 time_t	scrollTime = clock();
 
 void ScrollClouds() {
@@ -71,9 +71,8 @@ void Display() {
 	heart1.Display();
 	heart2.Display();
 	heart3.Display();
-	//freezeClock.Display();
-	//bertNeutral.Display();
-	ground.Display();
+	bertNeutral.Display();
+	//ground.Display();
 	glFlush();
 }
 
@@ -110,7 +109,6 @@ int main(int ac, char** av) {
 	sun.compensateAspectRatio = true;
 	clouds.compensateAspectRatio = true;
 	bertNeutral.compensateAspectRatio = true;
-	ground.compensateAspectRatio = true;
 	sun.Initialize(sunImage, .8f);
 	sun.SetScale(vec2(0.3f, 0.28f));
 	sun.SetPosition(vec2(0.92f, 0.82f));
@@ -118,9 +116,9 @@ int main(int ac, char** av) {
 	freezeClock.Initialize(clockImage, 0.9f);
 	freezeClock.SetScale(vec2(0.075f, 0.075f));
 	bertNeutral.Initialize(bertNeutralImage, 0.9f);
-	ground.Initialize(groundImage, 0.9f);
-	ground.SetScale(vec2(2.0f, 0.25f));
-	ground.SetPosition(vec2(0.0f, -0.75f));
+	bertNeutral.SetScale(vec2(0.12f, 0.12f));
+	bertNeutral.SetPosition(vec2(-0.7f, -0.2f));
+	//ground.Initialize(groundImage, 0.9f);
 	// callbacks
 	RegisterResize(Resize);
 	// event loop
