@@ -20,14 +20,18 @@ Sprite  heart2;
 Sprite  heart3;
 Sprite  freezeClock;
 Sprite  bertNeutral;
+Sprite  bertDetermined;
 Sprite  ground;
+Sprite  cactus;
+string  cactusImage = "Cactus.png";
 string  groundImage = "Ground.png";
 string  bertNeutralImage = "Bert-neutral.png";
+string  bertDeterminedImage = "Bert-determined.png";
 string  clockImage = "Clock.png";
 string  heartImage = "Heart.png";
 string  sunImage = "Sun.png";
 string	cloudsImage = "Clouds.png";
-bool	scrolling = false;
+bool	scrolling = true;
 
 // Scrolling Clouds
 
@@ -45,7 +49,7 @@ void ScrollClouds() {
 
 // Scrolling Ground
 
-float	loopDurationGround = 8, accumulatedTimeGround = 0;
+float	loopDurationGround = 3, accumulatedTimeGround = 0;
 time_t	scrollTimeGround = clock();
 
 void ScrollGround() {
@@ -72,8 +76,10 @@ void Display() {
 	heart2.Display();
 	heart3.Display();
 	//freezeClock.Display();
-	bertNeutral.Display();
+	//bertNeutral.Display();
+	bertDetermined.Display();
 	ground.Display();
+	cactus.Display();
 	glFlush();
 }
 
@@ -110,7 +116,9 @@ int main(int ac, char** av) {
 	sun.compensateAspectRatio = true;
 	clouds.compensateAspectRatio = true;
 	bertNeutral.compensateAspectRatio = true;
+	bertDetermined.compensateAspectRatio = true;
 	ground.compensateAspectRatio = true;
+	cactus.compensateAspectRatio = true;
 	sun.Initialize(sunImage, .8f);
 	sun.SetScale(vec2(0.3f, 0.28f));
 	sun.SetPosition(vec2(0.92f, 0.82f));
@@ -120,9 +128,15 @@ int main(int ac, char** av) {
 	bertNeutral.Initialize(bertNeutralImage, 0.9f);
 	bertNeutral.SetScale(vec2(0.12f, 0.12f));
 	bertNeutral.SetPosition(vec2(-0.5f, -0.395f));
+	bertDetermined.Initialize(bertDeterminedImage, 0.9f);
+	bertDetermined.SetScale(vec2(0.12f, 0.12f));
+	bertDetermined.SetPosition(vec2(-0.5f, -0.395f));
 	ground.Initialize(groundImage, 0.9f);
 	ground.SetScale(vec2(2.0f, 0.25f));
 	ground.SetPosition(vec2(0.0f, -0.75f));
+	cactus.Initialize(cactusImage, 0.9f);
+	cactus.SetScale(vec2(0.13f, 0.18f));
+	cactus.SetPosition(vec2(0.3f, -0.32f));
 	// callbacks
 	RegisterResize(Resize);
 	// event loop
