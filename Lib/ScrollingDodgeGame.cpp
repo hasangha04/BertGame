@@ -6,8 +6,10 @@
 #include <GLFW/glfw3.h>
 #include <time.h>
 #include "GLXtras.h"
+#include "Draw.h"
 #include "IO.h"
 #include "Sprite.h"
+#include <vector>
 
 // Application Variables
 
@@ -20,18 +22,50 @@ Sprite  heart2;
 Sprite  heart3;
 Sprite  freezeClock;
 Sprite  bertNeutral;
+Sprite  bertRunning;
 Sprite  bertDetermined;
 Sprite  ground;
 Sprite  cactus;
 string  cactusImage = "Cactus.png";
 string  groundImage = "Ground.png";
 string  bertNeutralImage = "Bert-neutral.png";
+string  bertRunningImage = "Bert.gif";
 string  bertDeterminedImage = "Bert-determined.png";
 string  clockImage = "Clock.png";
 string  heartImage = "Heart.png";
 string  sunImage = "Sun.png";
 string	cloudsImage = "Clouds.png";
+vector<string> bertNames = { bertRunningImage, bertDeterminedImage };
 bool	scrolling = true;
+
+// probes
+vec2 branchSensors[] = { { .9f, .3f}, {.3f, 0.9f}, {-.2f, 0.9f}, {0.9f, 0.0f}, {-.9f, -.4f}, {-.9f, .0f} };
+// locations wrt branch sprite
+
+// Display
+
+vec3 red(1, 0, 0), grn(0, .5f, 0), yel(1, 1, 0);
+
+vec3 Probe(vec2 ndc) {
+	// ndc (normalized device coords) lower left (-1,-1) to upper right (1,1)
+	// return screen-space s: s.z is depth-buffer value at pixel (s.x, s.y)
+	int4 vp = VP();
+	vec3 s(vp[0] + (ndc.x + 1) * vp[2] / 2, vp[1] + (ndc.y + 1) * vp[3] / 2, 0);
+	DepthXY((int)s.x, (int)s.y, s.z);
+	return s;
+}
+
+vec3 Probe(vec2 v, mat4 m) {
+	return Probe(Vec2(m * vec4(v, 0, 1)));
+}
+
+// Application
+
+const char* usage = R"(Usage:
+	mouse drag: move sprite
+	mouse wheel: scale
+	r/R: rotate raygun
+)";
 
 // Scrolling Clouds
 
@@ -59,8 +93,16 @@ void ScrollGround() {
 		accumulatedTimeGround += dt;
 	}
 	scrollTimeGround = now;
+	float oldU = ground.uvTransform[0][3];
 	float u = accumulatedTimeGround / loopDurationGround;
 	ground.uvTransform = Translate(u, 0, 0);
+	float newU = ground.uvTransform[0][3];
+	float du = newU - oldU;
+
+	// Move Cactus by 2 * du in order to keep pace with ground
+	vec2 p = cactus.GetPosition();
+	p.x -= 2 * du;
+	cactus.SetPosition(p);
 }
 
 // Display
@@ -68,8 +110,8 @@ void ScrollGround() {
 void Display() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glClear(GL_DEPTH_BUFFER_BIT);
 	glDisable(GL_DEPTH_TEST);
+	glClear(GL_DEPTH_BUFFER_BIT);
 	clouds.Display();
 	sun.Display();
 	heart1.Display();
@@ -77,9 +119,22 @@ void Display() {
 	heart3.Display();
 	//freezeClock.Display();
 	//bertNeutral.Display();
-	bertDetermined.Display();
+	//bertDetermined.Display();
+	bertRunning.Display();
 	ground.Display();
+
+	// test branch probes first, then display branch
+	const int nBranchSensors = sizeof(branchSensors) / sizeof(vec2);
+	vec3 branchProbes[nBranchSensors];
+	for (int i = 0; i < nBranchSensors; i++)
+		branchProbes[i] = Probe(branchSensors[i], cactus.ptTransform);
 	cactus.Display();
+	// draw probes
+	glDisable(GL_DEPTH_TEST);
+	UseDrawShader(ScreenMode());
+	for (int i = 0; i < nBranchSensors; i++)
+		Disk(branchProbes[i], abs(branchProbes[i].z - bertRunning.z) < .05f ? 20.f : 9.f, red);
+	glEnable(GL_DEPTH_TEST); // need z-buffer for mouse hit-test
 	glFlush();
 }
 
@@ -117,6 +172,7 @@ int main(int ac, char** av) {
 	clouds.compensateAspectRatio = true;
 	bertNeutral.compensateAspectRatio = true;
 	bertDetermined.compensateAspectRatio = true;
+	bertRunning.compensateAspectRatio = true;
 	ground.compensateAspectRatio = true;
 	cactus.compensateAspectRatio = true;
 	sun.Initialize(sunImage, .8f);
@@ -131,6 +187,12 @@ int main(int ac, char** av) {
 	bertDetermined.Initialize(bertDeterminedImage, 0.9f);
 	bertDetermined.SetScale(vec2(0.12f, 0.12f));
 	bertDetermined.SetPosition(vec2(-0.5f, -0.395f));
+	//bertRunning.Initialize(bertRunningImage, 0.9f);
+	bertRunning.Initialize(bertNames, "", 0.9f);
+	bertRunning.autoAnimate = false;
+	bertRunning.SetFrame(0);
+	bertRunning.SetScale(vec2(0.12f, 0.12f));
+	bertRunning.SetPosition(vec2(-0.5f, -0.395f));
 	ground.Initialize(groundImage, 0.9f);
 	ground.SetScale(vec2(2.0f, 0.25f));
 	ground.SetPosition(vec2(0.0f, -0.75f));
