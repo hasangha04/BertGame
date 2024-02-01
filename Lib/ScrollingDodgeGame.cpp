@@ -30,12 +30,14 @@ string  cactusImage = "Cactus.png";
 string  groundImage = "Ground.png";
 string  bertNeutralImage = "Bert-neutral.png";
 string  bertRunningImage = "Bert.gif";
+string  bertRun1 = "Bert-run1-mia.png";
+string  bertRun2 = "Bert-run2-mia.png";
 string  bertDeterminedImage = "Bert-determined.png";
 string  clockImage = "Clock.png";
 string  heartImage = "Heart.png";
 string  sunImage = "Sun.png";
 string	cloudsImage = "Clouds.png";
-vector<string> bertNames = { bertRunningImage, bertDeterminedImage };
+vector<string> bertNames = { bertRun1, bertRun2 };
 bool	scrolling = true;
 
 // probes
@@ -58,14 +60,6 @@ vec3 Probe(vec2 ndc) {
 vec3 Probe(vec2 v, mat4 m) {
 	return Probe(Vec2(m * vec4(v, 0, 1)));
 }
-
-// Application
-
-const char* usage = R"(Usage:
-	mouse drag: move sprite
-	mouse wheel: scale
-	r/R: rotate raygun
-)";
 
 // Scrolling Clouds
 
@@ -188,11 +182,11 @@ int main(int ac, char** av) {
 	bertDetermined.SetScale(vec2(0.12f, 0.12f));
 	bertDetermined.SetPosition(vec2(-0.5f, -0.395f));
 	//bertRunning.Initialize(bertRunningImage, 0.9f);
-	bertRunning.Initialize(bertNames, "", 0.9f);
-	bertRunning.autoAnimate = false;
-	bertRunning.SetFrame(0);
+	bertRunning.Initialize(bertNames, "", 0.9f, 0.04);
+	//bertRunning.autoAnimate = false;
+	//bertRunning.SetFrame(0);
 	bertRunning.SetScale(vec2(0.12f, 0.12f));
-	bertRunning.SetPosition(vec2(-0.5f, -0.380f));
+	bertRunning.SetPosition(vec2(-0.5f, -0.395f));
 	ground.Initialize(groundImage, 0.9f);
 	ground.SetScale(vec2(2.0f, 0.25f));
 	ground.SetPosition(vec2(0.0f, -0.75f));
