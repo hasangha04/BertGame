@@ -189,8 +189,8 @@ int main(int ac, char** av) {
 	bertDetermined.SetPosition(vec2(-0.5f, -0.395f));
 	//bertRunning.Initialize(bertRunningImage, 0.9f);
 	bertRunning.Initialize(bertNames, "", 0.9f);
-	bertRunning.autoAnimate = false;
-	bertRunning.SetFrame(0);
+	//bertRunning.autoAnimate = false;
+	//bertRunning.SetFrame(0);
 	bertRunning.SetScale(vec2(0.12f, 0.12f));
 	bertRunning.SetPosition(vec2(-0.5f, -0.380f));
 	ground.Initialize(groundImage, 0.9f);
