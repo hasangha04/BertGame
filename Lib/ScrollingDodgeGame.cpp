@@ -192,7 +192,7 @@ int main(int ac, char** av) {
 	bertRunning.autoAnimate = false;
 	bertRunning.SetFrame(0);
 	bertRunning.SetScale(vec2(0.12f, 0.12f));
-	bertRunning.SetPosition(vec2(-0.5f, -0.395f));
+	bertRunning.SetPosition(vec2(-0.5f, -0.380f));
 	ground.Initialize(groundImage, 0.9f);
 	ground.SetScale(vec2(2.0f, 0.25f));
 	ground.SetPosition(vec2(0.0f, -0.75f));
