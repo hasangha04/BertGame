@@ -17,9 +17,10 @@ int		winWidth = 1522, winHeight = 790;
 
 Sprite	clouds;
 Sprite  sun;
-Sprite  heart1;
-Sprite  heart2;
-Sprite  heart3;
+//Sprite  heart1;
+//Sprite  heart2;
+//Sprite  heart3;
+Sprite  hearts[3];
 Sprite  freezeClock;
 Sprite  bertNeutral;
 Sprite  bertRunning;
@@ -81,7 +82,7 @@ void ScrollClouds() {
 
 // Scrolling Ground
 
-float	loopDurationGround = 3, accumulatedTimeGround = 0;
+float	loopDurationGround = 10, accumulatedTimeGround = 0;
 time_t	scrollTimeGround = clock();
 
 void ScrollGround() {
@@ -112,18 +113,43 @@ void Keyboard(int key, bool press, bool shift, bool control) {
 	}
 }
 
+// Gameplay
+
+bool bertHit = false;
+bool bertPrevHit = false;
+int numHearts = 3;
+
+void UpdateStatus()
+{
+	if (!bertPrevHit && bertHit) 
+	{
+		bertPrevHit = true;
+		numHearts--;
+		if (numHearts < 0)
+			numHearts = 0;
+	}
+	vec2 p = cactus.GetPosition();
+	if (p.x < -1.2)
+	{
+		cactus.SetPosition(vec2(1.2f, -0.32f));
+		bertPrevHit = false;
+	}
+}
+
 // Display
 
 void Display() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	clouds.Display();
 	sun.Display();
-	heart1.Display();
+	/*heart1.Display();
 	heart2.Display();
-	heart3.Display();
+	heart3.Display();*/
+	for (int i = 0; i < numHearts; i++)
+		hearts[i].Display();
 	//freezeClock.Display();
 	//bertNeutral.Display();
 	//bertDetermined.Display();
@@ -160,11 +186,13 @@ void Display() {
 		branchProbes[i] = Probe(branchSensors[i], cactus.ptTransform);
 	cactus.Display();
 	// draw probes
-	glDisable(GL_DEPTH_TEST);
-	UseDrawShader(ScreenMode());
+	//glDisable(GL_DEPTH_TEST);
+	//UseDrawShader(ScreenMode());
+	bertHit = false;
 	for (int i = 0; i < nBranchSensors; i++)
-		Disk(branchProbes[i], abs(branchProbes[i].z - bertRunning.z) < .05f ? 20.f : 9.f, red);
-	glEnable(GL_DEPTH_TEST); // need z-buffer for mouse hit-test
+		if (abs(branchProbes[i].z - bertRunning.z) < .05f)
+			bertHit = true;
+		//Disk(branchProbes[i], abs(branchProbes[i].z - bertRunning.z) < .05f ? 20.f : 9.f, red);
 	glFlush();
 }
 
@@ -176,27 +204,27 @@ void Resize(int width, int height) {
 }
 
 void initializeHearts() {
-	heart1.compensateAspectRatio = true;
-	heart2.compensateAspectRatio = true;
-	heart3.compensateAspectRatio = true;
+	hearts[0].compensateAspectRatio = true;
+	hearts[1].compensateAspectRatio = true;
+	hearts[2].compensateAspectRatio = true;
 
-	heart1.Initialize(heartImage, 0.9f);
-	heart1.SetScale(vec2(0.05f, 0.05f));
-	heart1.SetPosition(vec2(-0.97f, 0.9f));
+	hearts[0].Initialize(heartImage, -.4f);
+	hearts[0].SetScale(vec2(0.05f, 0.05f));
+	hearts[0].SetPosition(vec2(-0.97f, 0.9f));
 
-	heart2.Initialize(heartImage, 0.9f);
-	heart2.SetScale(vec2(0.05f, 0.05f));
-	heart2.SetPosition(vec2(-0.91f, 0.9f));
+	hearts[1].Initialize(heartImage, -.4f);
+	hearts[1].SetScale(vec2(0.05f, 0.05f));
+	hearts[1].SetPosition(vec2(-0.91f, 0.9f));
 
-	heart3.Initialize(heartImage, 0.9f);
-	heart3.SetScale(vec2(0.05f, 0.05f));
-	heart3.SetPosition(vec2(-0.85f, 0.9f));
+	hearts[2].Initialize(heartImage, -.4f);
+	hearts[2].SetScale(vec2(0.05f, 0.05f));
+	hearts[2].SetPosition(vec2(-0.85f, 0.9f));
 }
 
 int main(int ac, char** av) {
 	// init app window and GL context
 	GLFWwindow* w = InitGLFW(100, 100, winWidth, winHeight, "Dodge!!");
-	clouds.Initialize(cloudsImage, .7f);
+	clouds.Initialize(cloudsImage, 0);
 	freezeClock.compensateAspectRatio = true;
 	sun.compensateAspectRatio = true;
 	clouds.compensateAspectRatio = true;
@@ -205,28 +233,28 @@ int main(int ac, char** av) {
 	bertRunning.compensateAspectRatio = true;
 	ground.compensateAspectRatio = true;
 	cactus.compensateAspectRatio = true;
-	sun.Initialize(sunImage, .8f);
+	sun.Initialize(sunImage, -.4f);
 	sun.SetScale(vec2(0.3f, 0.28f));
 	sun.SetPosition(vec2(0.92f, 0.82f));
 	initializeHearts();
-	freezeClock.Initialize(clockImage, 0.9f);
+	freezeClock.Initialize(clockImage, -.4f);
 	freezeClock.SetScale(vec2(0.075f, 0.075f));
-	bertNeutral.Initialize(bertNeutralImage, 0.9f);
+	bertNeutral.Initialize(bertNeutralImage, -.4f);
 	bertNeutral.SetScale(vec2(0.12f, 0.12f));
 	bertNeutral.SetPosition(vec2(-0.5f, -0.395f));
-	bertDetermined.Initialize(bertDeterminedImage, 0.9f);
+	bertDetermined.Initialize(bertDeterminedImage, -.4f);
 	bertDetermined.SetScale(vec2(0.12f, 0.12f));
 	bertDetermined.SetPosition(vec2(-0.5f, -0.395f));
 	//bertRunning.Initialize(bertRunningImage, 0.9f);
-	bertRunning.Initialize(bertNames, "", 0.9f, 0.08);
+	bertRunning.Initialize(bertNames, "", -.4f, 0.08);
 	//bertRunning.autoAnimate = false;
 	//bertRunning.SetFrame(0);
 	bertRunning.SetScale(vec2(0.12f, 0.12f));
 	bertRunning.SetPosition(vec2(-0.5f, -0.395f));
-	ground.Initialize(groundImage, 0.9f);
+	ground.Initialize(groundImage, -.4f);
 	ground.SetScale(vec2(2.0f, 0.25f));
 	ground.SetPosition(vec2(0.0f, -0.75f));
-	cactus.Initialize(cactusImage, 0.9f);
+	cactus.Initialize(cactusImage, -.8f);
 	cactus.SetScale(vec2(0.13f, 0.18f));
 	cactus.SetPosition(vec2(0.3f, -0.32f));
 	// callbacks
@@ -237,6 +265,7 @@ int main(int ac, char** av) {
 		ScrollClouds();
 		ScrollGround();
 		Display();
+		UpdateStatus();
 		glfwSwapBuffers(w);
 		glfwPollEvents();
 	}
