@@ -39,6 +39,10 @@ string  sunImage = "Sun.png";
 string	cloudsImage = "Clouds.png";
 vector<string> bertNames = { bertRun1, bertRun2 };
 bool	scrolling = true;
+bool	jumping = false;
+time_t  startJump;
+time_t  endJump;
+float	maxJumpHeight;
 
 // probes
 vec2 branchSensors[] = { { .9f, .3f}, {.3f, 0.9f}, {-.2f, 0.9f}, {0.9f, 0.0f}, {-.9f, -.4f}, {-.9f, .0f} };
@@ -99,6 +103,15 @@ void ScrollGround() {
 	cactus.SetPosition(p);
 }
 
+// Jumping Bert
+
+void Keyboard(int key, bool press, bool shift, bool control) {
+	if ((press && key == ' ') && jumping == false) {
+		jumping = true;
+		startJump = clock();
+	}
+}
+
 // Display
 
 void Display() {
@@ -116,6 +129,29 @@ void Display() {
 	//bertDetermined.Display();
 	bertRunning.Display();
 	ground.Display();
+
+	// check if Bert is jumping
+	if (jumping && clock()-startJump < 420) {
+		bertRunning.autoAnimate = false;
+		bertRunning.SetFrame(0);
+		float jumpHeight = (clock() - startJump)*0.002-0.395;
+		maxJumpHeight = jumpHeight;
+		bertRunning.SetPosition(vec2(-0.5f, jumpHeight));
+		endJump = clock();
+	}
+	else {
+		vec2 p = bertRunning.GetPosition();
+		float jumpHeight = p.y;
+		if (clock() - endJump > 30) {
+			jumpHeight = maxJumpHeight - 0.0018 * (clock() - endJump);
+			bertRunning.SetPosition(vec2(-0.5f, jumpHeight));
+		}
+		if (jumpHeight <= -0.395f) {
+			bertRunning.autoAnimate = true;
+			bertRunning.SetPosition(vec2(-0.5f, -0.395f));
+			jumping = false;
+		}
+	}
 
 	// test branch probes first, then display branch
 	const int nBranchSensors = sizeof(branchSensors) / sizeof(vec2);
@@ -182,7 +218,7 @@ int main(int ac, char** av) {
 	bertDetermined.SetScale(vec2(0.12f, 0.12f));
 	bertDetermined.SetPosition(vec2(-0.5f, -0.395f));
 	//bertRunning.Initialize(bertRunningImage, 0.9f);
-	bertRunning.Initialize(bertNames, "", 0.9f, 0.04);
+	bertRunning.Initialize(bertNames, "", 0.9f, 0.08);
 	//bertRunning.autoAnimate = false;
 	//bertRunning.SetFrame(0);
 	bertRunning.SetScale(vec2(0.12f, 0.12f));
@@ -195,6 +231,7 @@ int main(int ac, char** av) {
 	cactus.SetPosition(vec2(0.3f, -0.32f));
 	// callbacks
 	RegisterResize(Resize);
+	RegisterKeyboard(Keyboard);
 	// event loop
 	while (!glfwWindowShouldClose(w)) {
 		ScrollClouds();
