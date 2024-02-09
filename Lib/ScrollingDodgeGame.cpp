@@ -17,9 +17,6 @@ int		winWidth = 1522, winHeight = 790;
 
 Sprite	clouds;
 Sprite  sun;
-//Sprite  heart1;
-//Sprite  heart2;
-//Sprite  heart3;
 Sprite  hearts[3];
 Sprite  freezeClock;
 Sprite  bertNeutral;
@@ -145,16 +142,16 @@ void Display() {
 	glClear(GL_DEPTH_BUFFER_BIT);
 	clouds.Display();
 	sun.Display();
-	/*heart1.Display();
-	heart2.Display();
-	heart3.Display();*/
 	for (int i = 0; i < numHearts; i++)
+	{
 		hearts[i].Display();
+	}
+	bertRunning.Display();
+	ground.Display();
+
 	//freezeClock.Display();
 	//bertNeutral.Display();
 	//bertDetermined.Display();
-	bertRunning.Display();
-	ground.Display();
 
 	// check if Bert is jumping
 	if (jumping && clock()-startJump < 420) {
@@ -185,14 +182,10 @@ void Display() {
 	for (int i = 0; i < nBranchSensors; i++)
 		branchProbes[i] = Probe(branchSensors[i], cactus.ptTransform);
 	cactus.Display();
-	// draw probes
-	//glDisable(GL_DEPTH_TEST);
-	//UseDrawShader(ScreenMode());
 	bertHit = false;
 	for (int i = 0; i < nBranchSensors; i++)
 		if (abs(branchProbes[i].z - bertRunning.z) < .05f)
 			bertHit = true;
-		//Disk(branchProbes[i], abs(branchProbes[i].z - bertRunning.z) < .05f ? 20.f : 9.f, red);
 	glFlush();
 }
 
@@ -221,42 +214,35 @@ void initializeHearts() {
 	hearts[2].SetPosition(vec2(-0.85f, 0.9f));
 }
 
+Sprite initSprite(Sprite obj, string img, float z, float scaleX, float scaleY, float posX, float posY)
+{
+	obj.compensateAspectRatio = true;
+	obj.Initialize(img, z);
+	obj.SetScale(vec2(scaleX, scaleY));
+	obj.SetPosition(vec2(posX, posY));
+
+	return obj;
+}
+
 int main(int ac, char** av) {
 	// init app window and GL context
-	GLFWwindow* w = InitGLFW(100, 100, winWidth, winHeight, "Dodge!!");
+	GLFWwindow* w = InitGLFW(100, 100, winWidth, winHeight, "BertGame");
 	clouds.Initialize(cloudsImage, 0);
-	freezeClock.compensateAspectRatio = true;
-	sun.compensateAspectRatio = true;
 	clouds.compensateAspectRatio = true;
-	bertNeutral.compensateAspectRatio = true;
-	bertDetermined.compensateAspectRatio = true;
-	bertRunning.compensateAspectRatio = true;
-	ground.compensateAspectRatio = true;
-	cactus.compensateAspectRatio = true;
-	sun.Initialize(sunImage, -.4f);
-	sun.SetScale(vec2(0.3f, 0.28f));
-	sun.SetPosition(vec2(0.92f, 0.82f));
+
+	sun = initSprite(sun, sunImage, -.4f, 0.3f, 0.28f, 0.92f, 0.82f);
+	freezeClock = initSprite(freezeClock, clockImage, -.4f, 0.075f, 0.075f, 0.0f, 0.0f);
+	bertNeutral = initSprite(bertNeutral, bertNeutralImage, -.4f, 0.12f, 0.12f, -0.5f, -0.395f);
+	bertDetermined = initSprite(bertDetermined, bertDeterminedImage, -.4f, 0.12f, 0.12f, -0.5f, -0.395f);
+	ground = initSprite(ground, groundImage, -.4f, 2.0f, 0.25f, 0.0f, -0.75f);
+	cactus = initSprite(cactus, cactusImage, -.8f, 0.13f, 0.18f, 0.3f, -0.32f);
 	initializeHearts();
-	freezeClock.Initialize(clockImage, -.4f);
-	freezeClock.SetScale(vec2(0.075f, 0.075f));
-	bertNeutral.Initialize(bertNeutralImage, -.4f);
-	bertNeutral.SetScale(vec2(0.12f, 0.12f));
-	bertNeutral.SetPosition(vec2(-0.5f, -0.395f));
-	bertDetermined.Initialize(bertDeterminedImage, -.4f);
-	bertDetermined.SetScale(vec2(0.12f, 0.12f));
-	bertDetermined.SetPosition(vec2(-0.5f, -0.395f));
-	//bertRunning.Initialize(bertRunningImage, 0.9f);
+
+	bertRunning.compensateAspectRatio = true;
 	bertRunning.Initialize(bertNames, "", -.4f, 0.08);
-	//bertRunning.autoAnimate = false;
-	//bertRunning.SetFrame(0);
 	bertRunning.SetScale(vec2(0.12f, 0.12f));
 	bertRunning.SetPosition(vec2(-0.5f, -0.395f));
-	ground.Initialize(groundImage, -.4f);
-	ground.SetScale(vec2(2.0f, 0.25f));
-	ground.SetPosition(vec2(0.0f, -0.75f));
-	cactus.Initialize(cactusImage, -.8f);
-	cactus.SetScale(vec2(0.13f, 0.18f));
-	cactus.SetPosition(vec2(0.3f, -0.32f));
+
 	// callbacks
 	RegisterResize(Resize);
 	RegisterKeyboard(Keyboard);
