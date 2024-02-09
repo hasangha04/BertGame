@@ -79,7 +79,7 @@ void ScrollClouds() {
 
 // Scrolling Ground
 
-float	loopDurationGround = 10, accumulatedTimeGround = 0;
+float	loopDurationGround = 3, accumulatedTimeGround = 0;
 time_t	scrollTimeGround = clock();
 
 void ScrollGround() {
@@ -154,7 +154,7 @@ void Display() {
 	//bertDetermined.Display();
 
 	// check if Bert is jumping
-	if (jumping && clock()-startJump < 420) {
+	if (jumping && clock()-startJump < 380) {
 		bertRunning.autoAnimate = false;
 		bertRunning.SetFrame(0);
 		float jumpHeight = (clock() - startJump)*0.002-0.395;
@@ -239,7 +239,7 @@ int main(int ac, char** av) {
 	initializeHearts();
 
 	bertRunning.compensateAspectRatio = true;
-	bertRunning.Initialize(bertNames, "", -.4f, 0.08);
+	bertRunning.Initialize(bertNames, "", -.4f, 0.08f);
 	bertRunning.SetScale(vec2(0.12f, 0.12f));
 	bertRunning.SetPosition(vec2(-0.5f, -0.395f));
 
