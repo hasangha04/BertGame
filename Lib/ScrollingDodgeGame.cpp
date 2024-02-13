@@ -24,6 +24,8 @@ Sprite  bertRunning;
 Sprite  bertDetermined;
 Sprite  ground;
 Sprite  cactus;
+Sprite  game;
+string  gameImage = "Game.png";
 string  cactusImage = "Cactus.png";
 string  groundImage = "Ground.png";
 string  bertNeutralImage = "Bert-neutral.png";
@@ -114,6 +116,7 @@ void Keyboard(int key, bool press, bool shift, bool control) {
 
 bool bertHit = false;
 bool bertPrevHit = false;
+bool endGame = false;
 int numHearts = 3;
 
 void UpdateStatus()
@@ -123,7 +126,7 @@ void UpdateStatus()
 		bertPrevHit = true;
 		numHearts--;
 		if (numHearts < 0)
-			numHearts = 0;
+			endGame = true;
 	}
 	vec2 p = cactus.GetPosition();
 	if (p.x < -1.2)
@@ -236,6 +239,7 @@ int main(int ac, char** av) {
 	bertDetermined = initSprite(bertDetermined, bertDeterminedImage, -.4f, 0.12f, 0.12f, -0.5f, -0.395f);
 	ground = initSprite(ground, groundImage, -.4f, 2.0f, 0.25f, 0.0f, -0.75f);
 	cactus = initSprite(cactus, cactusImage, -.8f, 0.13f, 0.18f, 0.3f, -0.32f);
+	game = initSprite(game, gameImage, -.4f, 2.0f, 0.25f, 0.0f, -0.75f);
 	initializeHearts();
 
 	bertRunning.compensateAspectRatio = true;
