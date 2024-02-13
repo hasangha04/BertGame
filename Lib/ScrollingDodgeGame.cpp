@@ -39,10 +39,6 @@ string  sunImage = "Sun.png";
 string	cloudsImage = "Clouds.png";
 vector<string> bertNames = { bertRun1, bertRun2 };
 bool	scrolling = true;
-bool	jumping = false;
-time_t  startJump;
-time_t  endJump;
-float	maxJumpHeight;
 
 // probes
 vec2 branchSensors[] = { { .9f, .3f}, {.3f, 0.9f}, {-.2f, 0.9f}, {0.9f, 0.0f}, {-.9f, -.4f}, {-.9f, .0f} };
@@ -105,10 +101,38 @@ void ScrollGround() {
 
 // Jumping Bert
 
+bool	jumping = false;
+time_t  startJump, endJump;
+float	maxJumpHeight;
+
 void Keyboard(int key, bool press, bool shift, bool control) {
 	if ((press && key == ' ') && jumping == false) {
 		jumping = true;
 		startJump = clock();
+	}
+}
+
+void jumpingBert() {
+	if (jumping && clock() - startJump < 380) {
+		bertRunning.autoAnimate = false;
+		bertRunning.SetFrame(0);
+		float jumpHeight = (clock() - startJump) * 0.002 - 0.395;
+		maxJumpHeight = jumpHeight;
+		bertRunning.SetPosition(vec2(-0.5f, jumpHeight));
+		endJump = clock();
+	}
+	else {
+		vec2 p = bertRunning.GetPosition();
+		float jumpHeight = p.y;
+		if (clock() - endJump > 30) {
+			jumpHeight = maxJumpHeight - 0.0018 * (clock() - endJump);
+			bertRunning.SetPosition(vec2(-0.5f, jumpHeight));
+		}
+		if (jumpHeight <= -0.395f) {
+			bertRunning.autoAnimate = true;
+			bertRunning.SetPosition(vec2(-0.5f, -0.395f));
+			jumping = false;
+		}
 	}
 }
 
@@ -152,32 +176,7 @@ void Display() {
 	bertRunning.Display();
 	ground.Display();
 
-	//freezeClock.Display();
-	//bertNeutral.Display();
-	//bertDetermined.Display();
-
-	// check if Bert is jumping
-	if (jumping && clock()-startJump < 380) {
-		bertRunning.autoAnimate = false;
-		bertRunning.SetFrame(0);
-		float jumpHeight = (clock() - startJump)*0.002-0.395;
-		maxJumpHeight = jumpHeight;
-		bertRunning.SetPosition(vec2(-0.5f, jumpHeight));
-		endJump = clock();
-	}
-	else {
-		vec2 p = bertRunning.GetPosition();
-		float jumpHeight = p.y;
-		if (clock() - endJump > 30) {
-			jumpHeight = maxJumpHeight - 0.0018 * (clock() - endJump);
-			bertRunning.SetPosition(vec2(-0.5f, jumpHeight));
-		}
-		if (jumpHeight <= -0.395f) {
-			bertRunning.autoAnimate = true;
-			bertRunning.SetPosition(vec2(-0.5f, -0.395f));
-			jumping = false;
-		}
-	}
+	jumpingBert();
 
 	// test branch probes first, then display branch
 	const int nBranchSensors = sizeof(branchSensors) / sizeof(vec2);
@@ -217,13 +216,19 @@ void initializeHearts() {
 	hearts[2].SetPosition(vec2(-0.85f, 0.9f));
 }
 
+void initializeBert() {
+	bertRunning.compensateAspectRatio = true;
+	bertRunning.Initialize(bertNames, "", -.4f, 0.08f);
+	bertRunning.SetScale(vec2(0.12f, 0.12f));
+	bertRunning.SetPosition(vec2(-0.5f, -0.395f));
+}
+
 Sprite initSprite(Sprite obj, string img, float z, float scaleX, float scaleY, float posX, float posY)
 {
 	obj.compensateAspectRatio = true;
 	obj.Initialize(img, z);
 	obj.SetScale(vec2(scaleX, scaleY));
 	obj.SetPosition(vec2(posX, posY));
-
 	return obj;
 }
 
@@ -234,18 +239,14 @@ int main(int ac, char** av) {
 	clouds.compensateAspectRatio = true;
 
 	sun = initSprite(sun, sunImage, -.4f, 0.3f, 0.28f, 0.92f, 0.82f);
-	freezeClock = initSprite(freezeClock, clockImage, -.4f, 0.075f, 0.075f, 0.0f, 0.0f);
-	bertNeutral = initSprite(bertNeutral, bertNeutralImage, -.4f, 0.12f, 0.12f, -0.5f, -0.395f);
-	bertDetermined = initSprite(bertDetermined, bertDeterminedImage, -.4f, 0.12f, 0.12f, -0.5f, -0.395f);
+	//freezeClock = initSprite(freezeClock, clockImage, -.4f, 0.075f, 0.075f, 0.0f, 0.0f);
+	//bertNeutral = initSprite(bertNeutral, bertNeutralImage, -.4f, 0.12f, 0.12f, -0.5f, -0.395f);
+	//bertDetermined = initSprite(bertDetermined, bertDeterminedImage, -.4f, 0.12f, 0.12f, -0.5f, -0.395f);
 	ground = initSprite(ground, groundImage, -.4f, 2.0f, 0.25f, 0.0f, -0.75f);
 	cactus = initSprite(cactus, cactusImage, -.8f, 0.13f, 0.18f, 0.3f, -0.32f);
 	game = initSprite(game, gameImage, -.4f, 2.0f, 0.25f, 0.0f, -0.75f);
 	initializeHearts();
-
-	bertRunning.compensateAspectRatio = true;
-	bertRunning.Initialize(bertNames, "", -.4f, 0.08f);
-	bertRunning.SetScale(vec2(0.12f, 0.12f));
-	bertRunning.SetPosition(vec2(-0.5f, -0.395f));
+	initializeBert();
 
 	// callbacks
 	RegisterResize(Resize);
