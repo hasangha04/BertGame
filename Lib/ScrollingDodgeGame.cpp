@@ -44,8 +44,23 @@ bool	startedGame = false;
 bool	scrolling = false;
 
 // Start screen
+time_t bertIdleTime = clock(), bertBlinkTime = clock();
+bool bertBlinking = false;
+
 void startScreen() {
-	
+	if (clock() - bertIdleTime > 3000 && !bertBlinking) {
+		bertIdle.autoAnimate = true;
+		bertIdle.SetPosition(vec2(-0.5f, -0.395f));
+		bertBlinkTime = clock();
+		bertBlinking = true;
+	}
+	else if (clock() - bertBlinkTime > 200 && bertBlinking) {
+		bertIdleTime = clock();
+		bertIdle.autoAnimate = false;
+		bertIdle.SetFrame(0);
+		bertIdle.SetPosition(vec2(-0.5f, -0.395f));
+		bertBlinking = false;
+	}
 }
 
 // probes
@@ -118,6 +133,10 @@ void Keyboard(int key, bool press, bool shift, bool control) {
 		jumping = true;
 		startJump = clock();
 	}
+	else if ((press && key == ' ') && jumping == false && !startedGame) {
+		startedGame = true;
+		scrolling = true;
+	}
 }
 
 void jumpingBert() {
@@ -169,8 +188,6 @@ void UpdateStatus()
 }
 
 // Display
-time_t bertIdleTime = clock(), bertBlinkTime = clock();
-bool bertBlinking = false;
 
 void Display() {
 	glEnable(GL_BLEND);
@@ -183,22 +200,14 @@ void Display() {
 	{
 		hearts[i].Display();
 	}
-	bertIdle.Display();
-	bertRunning.Display();
 	ground.Display();
 
-	if (clock() - bertIdleTime > 4000 && !bertBlinking) {
-		bertIdle.autoAnimate = true;
-		bertIdle.SetPosition(vec2(-0.5f, -0.395f));
-		bertBlinkTime = clock();
-		bertBlinking = true;
+	if (!startedGame) {
+		bertIdle.Display();
+		startScreen();
 	}
-	else if (clock() - bertBlinkTime > 200 && bertBlinking) {
-		bertIdleTime = clock();
-		bertIdle.autoAnimate = false;
-		bertIdle.SetFrame(0);
-		bertIdle.SetPosition(vec2(-0.5f, -0.395f));
-		bertBlinking = false;
+	else {
+		bertRunning.Display();
 	}
 
 	jumpingBert();
@@ -244,20 +253,17 @@ void initializeHearts() {
 }
 
 void initializeBert() {
-	if (startedGame) {
-		bertRunning.compensateAspectRatio = true;
-		bertRunning.Initialize(bertNames, "", -.4f, 0.08f);
-		bertRunning.SetScale(vec2(0.12f, 0.12f));
-		bertRunning.SetPosition(vec2(-0.5f, -0.395f));
-	}
-	else {
-		bertIdle.compensateAspectRatio = true;
-		bertIdle.Initialize(bertIdles, "", -.4f, 0.05f);
-		bertIdle.SetScale(vec2(0.12f, 0.12f));
-		bertIdle.SetPosition(vec2(-0.5f, -0.395f));
-		bertIdle.autoAnimate = false;
-		bertIdle.SetFrame(0);
-	}
+	bertRunning.compensateAspectRatio = true;
+	bertRunning.Initialize(bertNames, "", -.4f, 0.08f);
+	bertRunning.SetScale(vec2(0.12f, 0.12f));
+	bertRunning.SetPosition(vec2(-0.5f, -0.395f));
+
+	bertIdle.compensateAspectRatio = true;
+	bertIdle.Initialize(bertIdles, "", -.4f, 0.05f);
+	bertIdle.SetScale(vec2(0.12f, 0.12f));
+	bertIdle.SetPosition(vec2(-0.5f, -0.395f));
+	bertIdle.autoAnimate = false;
+	bertIdle.SetFrame(0);
 }
 
 Sprite initSprite(Sprite obj, string img, float z, float scaleX, float scaleY, float posX, float posY)
