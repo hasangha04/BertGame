@@ -24,7 +24,7 @@ Sprite  bertRunning;
 Sprite  bertDetermined;
 Sprite  ground;
 Sprite  cactus;
-Sprite  game;
+Sprite  gameOver;
 string  gameImage = "Game.png";
 string  cactusImage = "Cactus.png";
 string  groundImage = "Ground.png";
@@ -149,8 +149,10 @@ void UpdateStatus()
 	{
 		bertPrevHit = true;
 		numHearts--;
-		if (numHearts < 0)
+		if (numHearts == 0)
+		{
 			endGame = true;
+		}
 	}
 	vec2 p = cactus.GetPosition();
 	if (p.x < -1.2)
@@ -188,6 +190,11 @@ void Display() {
 	for (int i = 0; i < nBranchSensors; i++)
 		if (abs(branchProbes[i].z - bertRunning.z) < .05f)
 			bertHit = true;
+
+	if (endGame == true)
+	{
+		gameOver.Display();
+	}
 	glFlush();
 }
 
@@ -244,7 +251,7 @@ int main(int ac, char** av) {
 	//bertDetermined = initSprite(bertDetermined, bertDeterminedImage, -.4f, 0.12f, 0.12f, -0.5f, -0.395f);
 	ground = initSprite(ground, groundImage, -.4f, 2.0f, 0.25f, 0.0f, -0.75f);
 	cactus = initSprite(cactus, cactusImage, -.8f, 0.13f, 0.18f, 0.3f, -0.32f);
-	game = initSprite(game, gameImage, -.4f, 2.0f, 0.25f, 0.0f, -0.75f);
+	gameOver = initSprite(gameOver, gameImage, -.9f, 0.0f, 0.0f, 0.0f, 0.0f);
 	initializeHearts();
 	initializeBert();
 
