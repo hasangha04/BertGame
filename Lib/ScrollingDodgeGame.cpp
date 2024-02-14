@@ -22,6 +22,7 @@ Sprite  freezeClock;
 Sprite  bertNeutral;
 Sprite  bertRunning;
 Sprite  bertDetermined;
+Sprite  bertIdle;
 Sprite  ground;
 Sprite  cactus;
 string  cactusImage = "Cactus.png";
@@ -36,7 +37,14 @@ string  heartImage = "Heart.png";
 string  sunImage = "Sun.png";
 string	cloudsImage = "Clouds.png";
 vector<string> bertNames = { bertRun1, bertRun2 };
-bool	scrolling = true;
+vector<string> bertIdles = {"Bert-idle_0.png", "Bert-idle_1.png","Bert-idle_2.png", "Bert-idle_3.png", "Bert-idle_4.png"};
+bool	startedGame = false;
+bool	scrolling = false;
+
+// Start screen
+void startScreen() {
+	
+}
 
 // probes
 vec2 branchSensors[] = { { .9f, .3f}, {.3f, 0.9f}, {-.2f, 0.9f}, {0.9f, 0.0f}, {-.9f, -.4f}, {-.9f, .0f} };
@@ -104,7 +112,7 @@ time_t  startJump, endJump;
 float	maxJumpHeight;
 
 void Keyboard(int key, bool press, bool shift, bool control) {
-	if ((press && key == ' ') && jumping == false) {
+	if ((press && key == ' ') && jumping == false && startedGame) {
 		jumping = true;
 		startJump = clock();
 	}
@@ -158,6 +166,8 @@ void UpdateStatus()
 }
 
 // Display
+time_t bertIdleTime = clock(), bertBlinkTime = clock();
+bool bertBlinking = false;
 
 void Display() {
 	glEnable(GL_BLEND);
@@ -170,21 +180,38 @@ void Display() {
 	{
 		hearts[i].Display();
 	}
+	bertIdle.Display();
 	bertRunning.Display();
 	ground.Display();
+
+	if (clock() - bertIdleTime > 4000 && !bertBlinking) {
+		bertIdle.autoAnimate = true;
+		bertIdle.SetPosition(vec2(-0.5f, -0.395f));
+		bertBlinkTime = clock();
+		bertBlinking = true;
+	}
+	else if (clock() - bertBlinkTime > 200 && bertBlinking) {
+		bertIdleTime = clock();
+		bertIdle.autoAnimate = false;
+		bertIdle.SetFrame(0);
+		bertIdle.SetPosition(vec2(-0.5f, -0.395f));
+		bertBlinking = false;
+	}
 
 	jumpingBert();
 
 	// test branch probes first, then display branch
-	const int nBranchSensors = sizeof(branchSensors) / sizeof(vec2);
-	vec3 branchProbes[nBranchSensors];
-	for (int i = 0; i < nBranchSensors; i++)
-		branchProbes[i] = Probe(branchSensors[i], cactus.ptTransform);
-	cactus.Display();
-	bertHit = false;
-	for (int i = 0; i < nBranchSensors; i++)
-		if (abs(branchProbes[i].z - bertRunning.z) < .05f)
-			bertHit = true;
+	if (scrolling) {
+		const int nBranchSensors = sizeof(branchSensors) / sizeof(vec2);
+		vec3 branchProbes[nBranchSensors];
+		for (int i = 0; i < nBranchSensors; i++)
+			branchProbes[i] = Probe(branchSensors[i], cactus.ptTransform);
+		cactus.Display();
+		bertHit = false;
+		for (int i = 0; i < nBranchSensors; i++)
+			if (abs(branchProbes[i].z - bertRunning.z) < .05f)
+				bertHit = true;
+	}
 	glFlush();
 }
 
@@ -214,10 +241,20 @@ void initializeHearts() {
 }
 
 void initializeBert() {
-	bertRunning.compensateAspectRatio = true;
-	bertRunning.Initialize(bertNames, "", -.4f, 0.08f);
-	bertRunning.SetScale(vec2(0.12f, 0.12f));
-	bertRunning.SetPosition(vec2(-0.5f, -0.395f));
+	if (startedGame) {
+		bertRunning.compensateAspectRatio = true;
+		bertRunning.Initialize(bertNames, "", -.4f, 0.08f);
+		bertRunning.SetScale(vec2(0.12f, 0.12f));
+		bertRunning.SetPosition(vec2(-0.5f, -0.395f));
+	}
+	else {
+		bertIdle.compensateAspectRatio = true;
+		bertIdle.Initialize(bertIdles, "", -.4f, 0.05f);
+		bertIdle.SetScale(vec2(0.12f, 0.12f));
+		bertIdle.SetPosition(vec2(-0.5f, -0.395f));
+		bertIdle.autoAnimate = false;
+		bertIdle.SetFrame(0);
+	}
 }
 
 Sprite initSprite(Sprite obj, string img, float z, float scaleX, float scaleY, float posX, float posY)
