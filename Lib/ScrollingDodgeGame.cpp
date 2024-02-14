@@ -23,6 +23,7 @@ Sprite  bertNeutral;
 Sprite  bertRunning;
 Sprite  bertDetermined;
 Sprite  bertIdle;
+Sprite  gameLogo;
 Sprite  ground;
 Sprite  cactus;
 Sprite  game;
@@ -38,16 +39,17 @@ string  clockImage = "Clock.png";
 string  heartImage = "Heart.png";
 string  sunImage = "Sun.png";
 string	cloudsImage = "Clouds.png";
+string  gameLogoImage = "bert-game-logo.png";
 vector<string> bertNames = { bertRun1, bertRun2 };
 vector<string> bertIdles = {"Bert-idle_0.png", "Bert-idle_1.png","Bert-idle_2.png", "Bert-idle_3.png", "Bert-idle_4.png"};
 bool	startedGame = false;
 bool	scrolling = false;
 
-// Start screen
+// Blinking Bert
 time_t bertIdleTime = clock(), bertBlinkTime = clock();
 bool bertBlinking = false;
 
-void startScreen() {
+void blinkingBert() {
 	if (clock() - bertIdleTime > 3000 && !bertBlinking) {
 		bertIdle.autoAnimate = true;
 		bertIdle.SetPosition(vec2(-0.5f, -0.395f));
@@ -204,7 +206,8 @@ void Display() {
 
 	if (!startedGame) {
 		bertIdle.Display();
-		startScreen();
+		gameLogo.Display();
+		blinkingBert();
 	}
 	else {
 		bertRunning.Display();
@@ -288,6 +291,7 @@ int main(int ac, char** av) {
 	ground = initSprite(ground, groundImage, -.4f, 2.0f, 0.25f, 0.0f, -0.75f);
 	cactus = initSprite(cactus, cactusImage, -.8f, 0.13f, 0.18f, 0.3f, -0.32f);
 	game = initSprite(game, gameImage, -.4f, 2.0f, 0.25f, 0.0f, -0.75f);
+	gameLogo = initSprite(gameLogo, gameLogoImage, -0.2f, 0.6f, 0.3f, 0.0f, 0.0f);
 	initializeHearts();
 	initializeBert();
 
