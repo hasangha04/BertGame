@@ -110,18 +110,19 @@ void ScrollGround() {
 	if (scrolling) {
 		float dt = (float)(now - scrollTimeGround) / CLOCKS_PER_SEC;
 		accumulatedTimeGround += dt;
+
+		float oldU = ground.uvTransform[0][3];
+		float u = accumulatedTimeGround / loopDurationGround;
+		ground.uvTransform = Translate(u, 0, 0);
+		float newU = ground.uvTransform[0][3];
+		float du = newU - oldU;
+
+		// Move Cactus by 2 * du in order to keep pace with ground
+		vec2 p = cactus.GetPosition();
+		p.x -= 2 * du;
+		cactus.SetPosition(p);
 	}
 	scrollTimeGround = now;
-	float oldU = ground.uvTransform[0][3];
-	float u = accumulatedTimeGround / loopDurationGround;
-	ground.uvTransform = Translate(u, 0, 0);
-	float newU = ground.uvTransform[0][3];
-	float du = newU - oldU;
-
-	// Move Cactus by 2 * du in order to keep pace with ground
-	vec2 p = cactus.GetPosition();
-	p.x -= 2 * du;
-	cactus.SetPosition(p);
 }
 
 // Jumping Bert
@@ -137,7 +138,8 @@ void Keyboard(int key, bool press, bool shift, bool control) {
 	}
 	else if ((press && key == ' ') && jumping == false && !startedGame) {
 		startedGame = true;
-		scrolling = true;
+		jumping = true;
+		startJump = clock();
 	}
 }
 
@@ -203,6 +205,10 @@ void Display() {
 	for (int i = 0; i < numHearts; i++)
 	{
 		hearts[i].Display();
+	}
+
+	if (scrolling == false && jumping == false && startedGame) {
+		scrolling = true;
 	}
 	ground.Display();
 
