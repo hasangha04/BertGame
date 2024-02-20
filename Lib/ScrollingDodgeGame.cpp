@@ -7,6 +7,7 @@
 #include <time.h>
 #include "GLXtras.h"
 #include "Draw.h"
+#include "Text.h"
 #include "IO.h"
 #include "Sprite.h"
 #include <vector>
@@ -22,6 +23,7 @@ Sprite  freezeClock;
 Sprite  bertNeutral;
 Sprite  bertRunning;
 Sprite  bertDetermined;
+Sprite  bertDead;
 Sprite  bertIdle;
 Sprite  gameLogo;
 Sprite  ground;
@@ -35,6 +37,7 @@ string  bertRunningImage = "Bert.gif";
 string  bertRun1 = "Bert-run1-mia.png";
 string  bertRun2 = "Bert-run2-mia.png";
 string  bertDeterminedImage = "Bert-determined.png";
+string  bertDeadImage = "Bert-dead.png";
 string  clockImage = "Clock.png";
 string  heartImage = "Heart.png";
 string  sunImage = "Sun.png";
@@ -44,6 +47,10 @@ vector<string> bertNames = { bertRun1, bertRun2 };
 vector<string> bertIdles = {"Bert-idle_0.png", "Bert-idle_1.png","Bert-idle_2.png", "Bert-idle_3.png", "Bert-idle_4.png"};
 bool	startedGame = false;
 bool	scrolling = false;
+
+int currentScore = 0;
+int highScore = 0;
+time_t startTime = clock();
 
 // Blinking Bert
 time_t bertIdleTime = clock(), bertBlinkTime = clock();
@@ -139,6 +146,8 @@ void Keyboard(int key, bool press, bool shift, bool control) {
 			endGame = false;
 			numHearts = 3;
 			cactus.SetPosition(vec2(1.2f, -0.32f));
+			startTime = clock();
+			currentScore = 0;
 		}
 		jumping = true;
 		startJump = clock();
@@ -147,6 +156,7 @@ void Keyboard(int key, bool press, bool shift, bool control) {
 		startedGame = true;
 		jumping = true;
 		startJump = clock();
+		startTime = startJump;
 	}
 }
 
@@ -222,7 +232,7 @@ void Display() {
 		gameLogo.Display();
 		blinkingBert();
 	}
-	else {
+	else if (!endGame) {
 		bertRunning.Display();
 	}
 
@@ -241,11 +251,20 @@ void Display() {
 				bertHit = true;
 	}
 
-	if (endGame == true)
+	if (endGame)
 	{
 		gameOver.Display();
+		bertDead.Display();
 		scrolling = false;
+		if (currentScore > highScore) {
+			highScore = currentScore;
+		}
 	}
+	else if (startedGame) {
+		currentScore += clock()/1000 - startTime/1000;
+	}
+	cout << currentScore << endl;
+
 	glFlush();
 }
 
@@ -286,6 +305,11 @@ void initializeBert() {
 	bertIdle.SetPosition(vec2(-0.5f, -0.395f));
 	bertIdle.autoAnimate = false;
 	bertIdle.SetFrame(0);
+
+	bertDead.compensateAspectRatio = true;
+	bertDead.Initialize(bertDeadImage, -.4f);
+	bertDead.SetScale(vec2(0.12f, 0.12f));
+	bertDead.SetPosition(vec2(-0.5f, -0.395f));
 }
 
 Sprite initSprite(Sprite obj, string img, float z, float scaleX, float scaleY, float posX, float posY)
