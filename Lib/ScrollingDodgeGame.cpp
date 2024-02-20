@@ -102,7 +102,7 @@ void ScrollClouds() {
 
 // Scrolling Ground
 
-float	loopDurationGround = 3, accumulatedTimeGround = 0;
+float	loopDurationGround = 1, accumulatedTimeGround = 0;
 time_t	scrollTimeGround = clock();
 
 void ScrollGround() {
@@ -132,7 +132,8 @@ time_t  startJump, endJump;
 float	maxJumpHeight;
 
 void Keyboard(int key, bool press, bool shift, bool control) {
-	if ((press && key == ' ') && jumping == false && startedGame) {
+	if ((press && key == ' ') && jumping == false && (startedGame || endGame)) {
+		endGame = false;
 		jumping = true;
 		startJump = clock();
 	}
@@ -229,18 +230,18 @@ void Display() {
 		vec3 branchProbes[nBranchSensors];
 		for (int i = 0; i < nBranchSensors; i++)
 			branchProbes[i] = Probe(branchSensors[i], cactus.ptTransform);
-		cactus.Display();
 		bertHit = false;
 		for (int i = 0; i < nBranchSensors; i++)
 			if (abs(branchProbes[i].z - bertRunning.z) < .05f)
 				bertHit = true;
 	}
+	cactus.Display();
 
-	if (endGame == true)
+	/*if (endGame == true)
 	{
 		gameOver.Display();
 		scrolling = false;
-	}
+	}*/
 	glFlush();
 }
 
@@ -303,7 +304,7 @@ int main(int ac, char** av) {
 	//bertNeutral = initSprite(bertNeutral, bertNeutralImage, -.4f, 0.12f, 0.12f, -0.5f, -0.395f);
 	//bertDetermined = initSprite(bertDetermined, bertDeterminedImage, -.4f, 0.12f, 0.12f, -0.5f, -0.395f);
 	ground = initSprite(ground, groundImage, -.4f, 2.0f, 0.25f, 0.0f, -0.75f);
-	cactus = initSprite(cactus, cactusImage, -.8f, 0.13f, 0.18f, 0.3f, -0.32f);
+	cactus = initSprite(cactus, cactusImage, -.8f, 0.13f, 0.18f, 2.5f, -0.32f);
 	gameOver = initSprite(gameOver, gameImage, -0.2f, 0.6f, 0.3f, 0.0f, 0.0f);
 	gameLogo = initSprite(gameLogo, gameLogoImage, -0.2f, 0.6f, 0.3f, 0.0f, 0.0f);
 	initializeHearts();
