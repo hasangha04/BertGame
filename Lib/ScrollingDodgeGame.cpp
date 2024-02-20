@@ -73,7 +73,9 @@ void blinkingBert() {
 }
 
 // probes
-vec2 branchSensors[] = { { .9f, .3f}, {.3f, 0.9f}, {-.2f, 0.9f}, {0.9f, 0.0f}, {-.9f, -.4f}, {-.9f, .0f} };
+vec2 branchSensors[] = { { .9f, .3f}, { .3f, 0.9f }, { -.2f, 0.9f }, { 0.9f, 0.0f }, { -.9f, -.4f }, { -.9f, .0f } };
+const int nBranchSensors = sizeof(branchSensors) / sizeof(vec2);
+vec3 branchProbes[nBranchSensors];
 // locations wrt branch sprite
 
 // Display
@@ -164,7 +166,7 @@ void jumpingBert() {
 	if (jumping && clock() - startJump < 380) {
 		bertRunning.autoAnimate = false;
 		bertRunning.SetFrame(0);
-		float jumpHeight = (clock() - startJump) * 0.002 - 0.395;
+		float jumpHeight = (float)(clock() - startJump) * 0.002f - 0.395f;
 		maxJumpHeight = jumpHeight;
 		bertRunning.SetPosition(vec2(-0.5f, jumpHeight));
 		endJump = clock();
@@ -173,7 +175,7 @@ void jumpingBert() {
 		vec2 p = bertRunning.GetPosition();
 		float jumpHeight = p.y;
 		if (clock() - endJump > 30) {
-			jumpHeight = maxJumpHeight - 0.0018 * (clock() - endJump);
+			jumpHeight = maxJumpHeight - 0.0018f * (float) (clock() - endJump);
 			bertRunning.SetPosition(vec2(-0.5f, jumpHeight));
 		}
 		if (jumpHeight <= -0.395f) {
@@ -240,8 +242,6 @@ void Display() {
 
 	// test branch probes first, then display branch
 	if (scrolling) {
-		const int nBranchSensors = sizeof(branchSensors) / sizeof(vec2);
-		vec3 branchProbes[nBranchSensors];
 		for (int i = 0; i < nBranchSensors; i++)
 			branchProbes[i] = Probe(branchSensors[i], cactus.ptTransform);
 		cactus.Display();
