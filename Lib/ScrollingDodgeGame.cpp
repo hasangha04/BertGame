@@ -132,10 +132,16 @@ void ScrollGround() {
 bool	jumping = false;
 time_t  startJump, endJump;
 float	maxJumpHeight;
+bool endGame = false;
+int numHearts = 3;
 
 void Keyboard(int key, bool press, bool shift, bool control) {
 	if ((press && key == ' ') && jumping == false && (startedGame || endGame)) {
-		endGame = false;
+		if (endGame) {
+			endGame = false;
+			numHearts = 3;
+			cactus.SetPosition(vec2(1.2f, -0.32f));
+		}
 		jumping = true;
 		startJump = clock();
 	}
@@ -174,8 +180,6 @@ void jumpingBert() {
 
 bool bertHit = false;
 bool bertPrevHit = false;
-bool endGame = false;
-int numHearts = 3;
 
 void UpdateStatus()
 {
@@ -230,18 +234,18 @@ void Display() {
 	if (scrolling) {
 		for (int i = 0; i < nBranchSensors; i++)
 			branchProbes[i] = Probe(branchSensors[i], cactus.ptTransform);
+		cactus.Display();
 		bertHit = false;
 		for (int i = 0; i < nBranchSensors; i++)
 			if (abs(branchProbes[i].z - bertRunning.z) < .05f)
 				bertHit = true;
 	}
-	cactus.Display();
 
-	/*if (endGame == true)
+	if (endGame == true)
 	{
 		gameOver.Display();
 		scrolling = false;
-	}*/
+	}
 	glFlush();
 }
 
