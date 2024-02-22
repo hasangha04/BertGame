@@ -141,21 +141,6 @@ vec3 Probe(vec2 v, mat4 m) {
 	return Probe(Vec2(m * vec4(v, 0, 1)));
 }
 
-// Probing Z-Buffer
-
-vec3 Probe(vec2 ndc) {
-	// ndc (normalized device coords) lower left (-1,-1) to upper right (1,1)
-	// return screen-space s: s.z is depth-buffer value at pixel (s.x, s.y)
-	int4 vp = VP();
-	vec3 s(vp[0] + (ndc.x + 1) * vp[2] / 2, vp[1] + (ndc.y + 1) * vp[3] / 2, 0);
-	DepthXY((int)s.x, (int)s.y, s.z);
-	return s;
-}
-
-vec3 Probe(vec2 v, mat4 m) {
-	return Probe(Vec2(m * vec4(v, 0, 1)));
-}
-
 // Display
 
 void blinkingBert() {
