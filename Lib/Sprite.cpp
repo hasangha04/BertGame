@@ -5,7 +5,6 @@
 #include "IO.h"
 #include "Sprite.h"
 #include <algorithm>
-#include <iostream>
 
 // Shader storage buffers for collision tests
 GLuint occupyBinding = 11, collideBinding = 12;
@@ -54,7 +53,7 @@ int BuildSpriteShader(bool collisionTest = false) {
 		layout(binding = 11, std430) buffer Occupy  { int occupy[]; };		// set occupy[x][y] to sprite id
 		layout(binding = 12, std430) buffer Collide { int collide[]; };		// does spriteId collide with spriteN?
 		layout(binding = 0, r32ui) uniform uimage1D atomicCollide;			// does spriteId collide with spriteN?
-		layout(binding = 0, offset = 0) uniform atomic_uint counter;
+		layout(binding = 0, offset = 0) uniform atomic_uint counter;		// # collided pixels
 		in vec2 uv;
 		out vec4 pColor;
 		uniform vec4 vp;
@@ -73,14 +72,16 @@ int BuildSpriteShader(bool collisionTest = false) {
 			if (pColor.a < .02) // if nearly full matte, don't tag z-buffer
 				discard;
 			if (pColor.a >= .02) {
-				vec3 cols[] = vec3[](vec3(1,0,0),vec3(1,1,0),vec3(0,1,0),vec3(0,0,1));
+				vec3 cols[] = vec3[](vec3(.7,.13,.13),vec3(1,0,0),vec3(1,1,0),vec3(0,1,0),vec3(.6,.2,.8),vec3(0,0,.8),vec3(1,.45,.23),
+									 vec3(0,.39,0),vec3(.12,.57,1),vec3(1,0,1),vec3(.24,.7,.44),vec3(0,.81,.82),vec3(.78,.08,.52));
+			//	vec3 cols[] = vec3[](vec3(1,0,0),vec3(1,1,0),vec3(0,1,0),vec3(0,0,1));
 				int id = int((gl_FragCoord.y-vp[1])*vp[2]+gl_FragCoord.x-vp[0]);
 				int o = occupy[id];
 				if (o > -1) {
 					collide[o] = 1;
 					atomicCounterIncrement(counter);
 					if (showOccupy)
-						pColor = vec4(cols[o], 1);
+						pColor = vec4(cols[(o+spriteId) % 12], 1);
 				}
 				occupy[id] = spriteId;
 			}
@@ -101,15 +102,17 @@ GLuint GetCollisionShader() {
 	return spriteCollisionShader;
 }
 
-bool CrossPositive(vec2 a, vec2 b, vec2 c) { return cross(vec2(b-a), vec2(c-b)) > 0; }
+bool CrossPositive(vec2 a, vec2 b, vec2 c) {
+	return cross(vec2(b-a), vec2(c-b)) > 0;
+}
 
 } // end namespace
 
 // Collision
 
-vector<int> clearOccupy, clearCollide;
-int nCollisionSprites = 0;
-GLuint spriteCountersBuf = 0;
+vector<int>	clearOccupy, clearCollide;
+int			nCollisionSprites = 0;
+GLuint		spriteCountersBuf = 0;
 
 void ResetCounter() {
 	GLuint count = 0;
@@ -123,7 +126,7 @@ int ReadCounter() {
 	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, spriteCountersBuf);
 	glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, spriteCountersBuf);
 	glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &count);
-	return count;
+	return count; // # pixels collided
 }
 
 void InitCollisionShaderStorage(int nsprites) {
@@ -160,7 +163,7 @@ void ClearOccupyAndCounter(int nsprites) {
 	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, w*h*sizeof(int), clearOccupy.data());
 	// collision buffer
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, collideBinding, collideBuffer);
-//	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, clearCollide.size()*sizeof(int), clearCollide.data());
+	// glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, clearCollide.size()*sizeof(int), clearCollide.data());
 	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, nsprites*sizeof(int), clearCollide.data());
 	// atomic counter
 	ResetCounter();
@@ -180,7 +183,7 @@ int TestCollisions(vector<Sprite *> &sprites) {
 		nCollisionSprites = nsprites;
 		InitCollisionShaderStorage(nsprites);
 	}
-//	else
+	// else
 		ClearOccupyAndCounter(nsprites);
 	vector<Sprite *> tmp = sprites;
 	for (int i = 0; i < nsprites; i++)
@@ -222,9 +225,7 @@ bool Intersect(mat4 m1, mat4 m2) {
 	return !xNoOverlap && !yNoOverlap;
 }
 
-bool Sprite::Intersect(Sprite &s) {
-	return ::Intersect(ptTransform, s.ptTransform);
-}
+bool Sprite::Intersect(Sprite &s) { return ::Intersect(ptTransform, s.ptTransform); }
 
 void Sprite::Initialize(GLuint texName, float z) {
 	this->z = z;
@@ -234,8 +235,9 @@ void Sprite::Initialize(GLuint texName, float z) {
 	UpdateTransform();
 }
 
-void Sprite::Initialize(string imageFile, float z) {
+void Sprite::Initialize(string imageFile, float z, bool compensateAspectRatio) {
 	this->z = z;
+	this->compensateAspectRatio = compensateAspectRatio;
 	textureName = ReadTexture(imageFile.c_str(), true, &nTexChannels, &imgWidth, &imgHeight);
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
@@ -268,6 +270,7 @@ void Sprite::InitializeGIF(string gifFile, float z) {
 	int nChannels = 0;
 	vector<GLuint> textureNames;
 	vector<float> frameDurations;
+	this->z = z;
 	nFrames = ReadGIF(gifFile.c_str(), textureNames, &nChannels, &frameDurations);
 	images.resize(nFrames);
 	for (int i = 0; i < nFrames; i++)
@@ -281,8 +284,7 @@ bool Sprite::Hit(double x, double y) {
 	if (DepthXY((int) x, (int) y, depth))
 		return abs(depth-z) < .01;
 	// test against quad
-	ViewportSize(winWidth, winHeight);
-	vec2 test((2.f*x)/winWidth-1, (2.f*y)/winHeight-1);
+	vec2 test = NDCfromScreen(x, y);
 	vec2 xPts[] = { PtTransform({-1,-1}), PtTransform({-1,1}), PtTransform({1,1}), PtTransform({1,-1}) };
 	for (int i = 0; i < 4; i++)
 		if (SpriteSpace::CrossPositive(test, xPts[i], xPts[(i+1)%4]))
@@ -294,17 +296,22 @@ void Sprite::SetRotation(float angle) { rotation = angle; UpdateTransform(); }
 
 void Sprite::SetPosition(vec2 p) { position = p; UpdateTransform(); }
 
-vec2 Sprite::GetPosition() { return position; }
+void Sprite::SetScreenPosition(int x, int y) {
+	vec4 vp = VP();
+	vec2 ndc((2.f*x)/vp[2]-1, (2.f*y)/vp[3]-1);
+	SetPosition(ndc);
+}
+
+vec2 Sprite::GetScreenPosition() { return ScreenFromNDC(position); }
 
 void Sprite::UpdateTransform() {
+	ptTransform = Translate(position.x, position.y, 0)*RotateZ(rotation)*Scale(scale.x, scale.y, 1);
 	if (compensateAspectRatio) {
-		int vp[4];
-		glGetIntegerv(GL_VIEWPORT, vp);
-		float aspectRatio = (float)vp[2]/(float)vp[3];
-		ptTransform = Translate(position.x, position.y, 0)*Scale(scale.x/aspectRatio, scale.y, 1)*RotateZ(rotation);
+		vec4 vp = VP();
+		float w = vp[2], h = vp[3];
+		vec3 scale = w > h? vec3(h/w, 1.f, 1.f) : vec3(1.f, w/h, 1.f);
+		ptTransform = Scale(scale)*ptTransform;
 	}
-	else
-		ptTransform = Translate(position.x, position.y, 0)*Scale(scale.x, scale.y, 1)*RotateZ(rotation);
 }
 
 vec2 Sprite::PtTransform(vec2 p) {
@@ -314,39 +321,41 @@ vec2 Sprite::PtTransform(vec2 p) {
 
 void Sprite::Down(double x, double y) {
 	oldMouse = position;
-	ViewportSize(winWidth, winHeight);
 	mouseDown = vec2((float) x, (float) y);
 }
 
 vec2 Sprite::Drag(double x, double y) {
 	vec2 dif(x-mouseDown.x, y-mouseDown.y);
-	vec2 difScale(2*dif.x/winWidth, 2*dif.y/winHeight);
+	vec4 vp = VP();
+	float m = vp[2] > vp[3]? vp[3] : vp[2];
+	vec2 difScale(2*dif.x/m, 2*dif.y/m);
 	SetPosition(oldMouse+difScale);
 	return difScale;
 }
 
-void Sprite::Wheel(double spin) {
-	scale += .1f*(float) spin;
-	scale.x = scale.x < FLT_MIN? FLT_MIN : scale.x;
-	scale.y = scale.y < FLT_MIN? FLT_MIN : scale.y;
+void Sprite::Wheel(double spin, bool scaleNotRotate) {
+	if (scaleNotRotate) {
+		scale += .1f*(float) spin;
+		scale.x = scale.x < FLT_MIN? FLT_MIN : scale.x;
+		scale.y = scale.y < FLT_MIN? FLT_MIN : scale.y;
+	}
+	else
+		rotation += 10*(float) spin;
 	UpdateTransform();
 }
-
-vec2 Sprite::GetScale() { return scale; }
 
 void Sprite::SetScale(vec2 s) {
 	scale = s;
 	UpdateTransform();
 }
 
-mat4 Sprite::GetPtTransform() { return ptTransform; }
-
 void Sprite::SetPtTransform(mat4 m) { ptTransform = m; }
 
 void Sprite::SetUvTransform(mat4 m) { uvTransform = m; }
 
 int GetSpriteShader() {
-	if (!spriteShader) SpriteSpace::BuildSpriteShader();
+	if (!spriteShader)
+		SpriteSpace::BuildSpriteShader();
 	return spriteShader;
 }
 
@@ -384,7 +393,7 @@ void Sprite::Display(mat4 *fullview, int textureUnit) {
 		glBindTexture(GL_TEXTURE_2D, textureName);
 		SetUniform(s, "nTexChannels", nTexChannels);
 	}
-	SetUniform(s, "textureImage", (int) textureUnit);
+	SetUniform(s, "textureImage", textureUnit);
 	SetUniform(s, "useMat", matName > 0);
 	SetUniform(s, "z", z);
 	if (matName > 0) {
@@ -394,7 +403,7 @@ void Sprite::Display(mat4 *fullview, int textureUnit) {
 	}
 	SetUniform(s, "view", fullview? *fullview*ptTransform : ptTransform);
 	SetUniform(s, "uvTransform", uvTransform);
-#ifdef GL_QUADS
+#ifndef __APPLE__
 	glDrawArrays(GL_QUADS, 0, 4);
 #else
 	glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -402,11 +411,15 @@ void Sprite::Display(mat4 *fullview, int textureUnit) {
 }
 
 void Sprite::SetFrameDuration(float dt) {
-	for (ImageInfo i : images)
+	for (ImageInfo &i : images)
 		i.duration = dt;
 }
 
 void Sprite::Release() {
-	glDeleteBuffers(1, &textureName);
-	if (matName > 0) glDeleteBuffers(1, &matName);
+	if (textureName > 0)
+		glDeleteBuffers(1, &textureName);
+	if (matName > 0)
+		glDeleteBuffers(1, &matName);
+	for (ImageInfo i : images)
+		glDeleteBuffers(1, &i.textureName);
 }
