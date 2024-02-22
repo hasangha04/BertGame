@@ -30,10 +30,7 @@ public:
 	void Resume() { if (paused) start = clock(); paused = false; }
 	void Reset() { start = clock(); accumulated = 0; }
 	float Elapsed() { return accumulated+(paused? 0 : TimeDif(clock(), start)); }
-	float Progress() {
-		float t = duration > 0? Elapsed()/duration : 0;
-		return t > 1? 1 : t;
-	}
+	float Progress() { return duration > 0? Elapsed()/duration : 0; }
 	Timer(float duration = 0) : duration(duration) { Reset(); }
 };
 
@@ -41,6 +38,14 @@ public:
 
 // xmouse and ymouse are in screen (pixel) coordinates with origin at LOWER-left (increasing ymouse is *upwards*)
 // MouseOver with 3D arguments expects an appropriate viewport
+
+vec2 NDCfromScreen(vec2 screen);
+vec2 NDCfromScreen(int x, int y);
+vec2 NDCfromScreen(float x, float y);
+vec2 NDCfromScreen(double x, double y);
+
+vec2 ScreenFromNDC(vec2 v);
+vec2 ScreenFromNDC(float x, float y);
 
 bool MouseOver(double xmouse, double ymouse, vec3 p, mat4 &view, int proximity = 12);
 

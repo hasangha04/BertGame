@@ -10,6 +10,24 @@
 
 // Mouse
 
+vec2 NDCfromScreen(vec2 v) {
+	vec4 vp = VP();
+	return vec2(2*(v.x-vp[0])/vp[2]-1, 2*(v.y-vp[1])/vp[3]-1);
+}
+
+vec2 NDCfromScreen(int x, int y) { return NDCfromScreen(vec2(x, y)); }
+
+vec2 NDCfromScreen(float x, float y) { return NDCfromScreen(vec2(x, y)); }
+
+vec2 NDCfromScreen(double x, double y) { return NDCfromScreen(vec2(x, y)); }
+
+vec2 ScreenFromNDC(vec2 v) {
+	vec4 vp = VP();
+	return vec2(vp[0]+(v.x+1)*vp[2]/2, vp[1]+(v.y+1)*vp[3]/2);
+}
+
+vec2 ScreenFromNDC(float x, float y) { return ScreenFromNDC(vec2(x, y)); }
+
 bool MouseOver(double x, double y, vec3 p, mat4 &view, int proximity) {
 	return ScreenD(x, y, p, view, NULL) < proximity;
 }
@@ -71,7 +89,7 @@ void Scale3x3(mat4 &f, float scale) {
 
 // Mover
 
-void SetPlane(vec3 p, mat4 modelview, mat4 persp, float *plane) {
+void SetPlane(vec3 p, mat4 modelview, float *plane) {
 	for (int i = 0; i < 3; i++)
 		plane[i] = modelview[2][i];  // zrow (which is product of modelview matrix with untransformed z-axis)
 	plane[3] = -plane[0]*p.x-plane[1]*p.y-plane[2]*p.z; // pass plane through point
@@ -85,7 +103,7 @@ void Mover::Down(vec3 *p, int x, int y, mat4 modelview, mat4 persp) {
 	point = p;
 	pMousedown = *p;
 	transform = NULL;
-	SetPlane(*p, modelview, persp, plane);
+	SetPlane(*p, modelview, plane);
 }
 
 void Mover::Down(mat4 *t, int x, int y, mat4 modelview, mat4 persp) {
@@ -97,7 +115,7 @@ void Mover::Down(mat4 *t, int x, int y, mat4 modelview, mat4 persp) {
 	transform = t;
 	point = NULL;
 	pMousedown = p; // MatrixOrigin(*t);
-	SetPlane(p, modelview, persp, plane);
+	SetPlane(p, modelview, plane);
 }
 
 vec3 Mover::Drag(int xMouse, int yMouse, mat4 modelview, mat4 persp) {
@@ -343,6 +361,8 @@ Quaternion Arcball::Drag(int x, int y) {
 		qrot = Quaternion(axis, (float) acos((double) dot(v1, v2)));
 		// qq = use == Use::Camera? qrot*qstart : qstart*qrot;
 		// **** Use::Camera (ie, qrot*qstart) is wrong - why? ****
+		// **** SEE 7-Assn-Hierarchy.cpp: NoWRT option ****
+		// **** COMPARE with 22-Articulate.cpp
 		// modelview *is* applied to the left of the mesh transforms
 		//   from Mesh.cpp: SetUniform(shader, "modelview", camera.modelview*toWorld);
 		// so, treat the camera as a body, like a mesh? (doesn't seem right)
@@ -480,7 +500,7 @@ void Joystick::Down(int x, int y, vec3 *b, vec3 *v, mat4 modelview, mat4 persp) 
 	mode = ScreenDSq(x, y, *base, fullview) < 100? JoyType::A_Base :
 		   ScreenDSq(x, y, *base+*vec, fullview) < 100? JoyType::A_Tip : JoyType::A_None;
 	if (mode == JoyType::A_Base)
-		SetPlane(*base, modelview, persp, plane);
+		SetPlane(*base, modelview, plane);
 }
 
 void Joystick::Drag(int x, int y, mat4 modelview, mat4 persp) {
@@ -514,10 +534,10 @@ void Joystick::Draw(vec3 color, mat4 modelview, mat4 persp) {
 //  bool frontFacing = FrontFacing(*base, *vec, modelview);
 	UseDrawShader(persp*modelview);
 #ifdef GL_LINE_STIPPLE
-	if (!frontFacing) {
+//	if (!frontFacing) {
 		glEnable(GL_LINE_STIPPLE);
 		glLineStipple(6, 0xAAAA);
-	}
+//	}
 #endif
 //  ArrowV(base, len*v, modelview, color, NULL, 10);
 	Line(*base, *base+*vec, 5, color);

@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 // if FreeType not linked, comment next line:
-#define FREETYPE_OK
+//#define FREETYPE_OK
 
 #define FormatString(buffer, maxBufferSize, format) {  \
 	(buffer)[0] = 0;                                   \
