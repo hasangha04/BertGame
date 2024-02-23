@@ -38,7 +38,7 @@ vector<string> bertIdles = {"Bert-idle_0.png", "Bert-idle_1.png","Bert-idle_2.pn
 
 // hearts
 int		numHearts = 3;
-vec2	heartPositions[] = { {-0.97f, 0.9f}, {-0.91f, 0.9f}, {-0.85f, 0.9f} };
+vec2	heartPositions[] = { {-1.86f, 0.9f}, {-1.75f, 0.9f}, {-1.64f, 0.9f} };
 
 // gamestate
 bool	startedGame = false, scrolling = false, endGame = false;
@@ -93,7 +93,7 @@ void jumpingBert() {
 		bertRunning.SetFrame(0);
 		float jumpHeight = (float)(clock() - startJump) * 0.002f - 0.395f;
 		maxJumpHeight = jumpHeight;
-		bertRunning.SetPosition(vec2(-0.5f, jumpHeight));
+		bertRunning.SetPosition(vec2(-1.0f, jumpHeight));
 		endJump = clock();
 	}
 	else {
@@ -101,11 +101,11 @@ void jumpingBert() {
 		float jumpHeight = p.y;
 		if (clock() - endJump > 30) {
 			jumpHeight = maxJumpHeight - 0.0018f * (float)(clock() - endJump);
-			bertRunning.SetPosition(vec2(-0.5f, jumpHeight));
+			bertRunning.SetPosition(vec2(-1.0f, jumpHeight));
 		}
 		if (jumpHeight <= -0.395f) {
 			bertRunning.autoAnimate = true;
-			bertRunning.SetPosition(vec2(-0.5f, -0.395f));
+			bertRunning.SetPosition(vec2(-1.0f, -0.395f));
 			jumping = false;
 		}
 	}
@@ -146,7 +146,7 @@ vec3 Probe(vec2 v, mat4 m) {
 void blinkingBert() {
 	if (clock() - bertIdleTime > 3000 && !bertBlinking) {
 		bertIdle.autoAnimate = true;
-		bertIdle.SetPosition(vec2(-0.5f, -0.395f));
+		bertIdle.SetPosition(vec2(-1.0f, -0.395f));
 		bertBlinkTime = clock();
 		bertBlinking = true;
 	}
@@ -154,7 +154,7 @@ void blinkingBert() {
 		bertIdleTime = clock();
 		bertIdle.autoAnimate = false;
 		bertIdle.SetFrame(0);
-		bertIdle.SetPosition(vec2(-0.5f, -0.395f));
+		bertIdle.SetPosition(vec2(-1.0f, -0.395f));
 		bertBlinking = false;
 	}
 }
@@ -215,17 +215,17 @@ void Display() {
 void initializeBert() {
 	bertRunning.Initialize(bertNames, "", -.4f, 0.08f);
 	bertRunning.SetScale(vec2(0.12f, 0.12f));
-	bertRunning.SetPosition(vec2(-0.5f, -0.395f));
+	bertRunning.SetPosition(vec2(-1.0f, -0.395f));
 
 	bertIdle.Initialize(bertIdles, "", -.4f, 0.05f);
 	bertIdle.SetScale(vec2(0.12f, 0.12f));
-	bertIdle.SetPosition(vec2(-0.5f, -0.395f));
+	bertIdle.SetPosition(vec2(-1.0f, -0.395f));
 	bertIdle.autoAnimate = false;
 	bertIdle.SetFrame(0);
 
 	bertDead.Initialize(bertDeadImage, -.4f);
 	bertDead.SetScale(vec2(0.12f, 0.12f));
-	bertDead.SetPosition(vec2(-0.5f, -0.395f));
+	bertDead.SetPosition(vec2(-1.0f, -0.395f));
 }
 
 void initSprite(Sprite &obj, string img, float z, vec2 scale, vec2 pos, bool compensateAR = true) {
