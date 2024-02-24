@@ -30,7 +30,10 @@ public:
 	void Resume() { if (paused) start = clock(); paused = false; }
 	void Reset() { start = clock(); accumulated = 0; }
 	float Elapsed() { return accumulated+(paused? 0 : TimeDif(clock(), start)); }
-	float Progress() { return duration > 0? Elapsed()/duration : 0; }
+	float Progress() {
+		float t = duration > 0? Elapsed()/duration : 0;
+		return t > 1? 1 : t;
+	}
 	Timer(float duration = 0) : duration(duration) { Reset(); }
 };
 

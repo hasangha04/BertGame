@@ -17,10 +17,9 @@ float	aspectRatio = (float) winWidth/winHeight;
 
 // sprites
 Sprite	clouds, sun, heart, freezeClock, bertNeutral, bertRunning, bertDetermined,
-		bertDead, bertIdle, gameLogo, ground, cactus, gameOver;
+		bertDead, bertHurt, bertIdle, gameLogo, ground, cactus, gameOver;
 
 // images
-//string	dir = "C:/Users/Jules/Code/GG-Projects/2024/2-Dodge/";
 string  gameImage = "GameOver.png", gameLogoImage = "bert-game-logo.png";
 string  cactusImage = "Cactus.png";
 string  groundImage = "Ground.png";
@@ -45,13 +44,14 @@ bool	startedGame = false, scrolling = false, endGame = false;
 int		currentScore = 0, highScore = 0;
 bool	bertBlinking = false;
 bool	jumping = false;
-bool	bertHit = false, bertPrevHit = false;
+bool	bertHit = false, bertPrevHit = false, bertSwitch = false;
 
 // times
 time_t	startTime = clock();
 time_t	bertIdleTime = clock(), bertBlinkTime = clock();
 time_t	scrollTimeClouds = clock(), scrollTimeGround = clock();
 time_t  startJump, endJump;
+time_t  bertHurtDisplayTime = 0;
 float	loopDurationClouds = 60, loopDurationGround = 5;	// in seconds
 
 // probes: locations wrt cactus sprite
@@ -113,16 +113,19 @@ void jumpingBert() {
 
 // Gameplay
 
-void UpdateStatus() {
+void UpdateStatus() 
+{
 	if (!bertPrevHit && bertHit) {
 		bertPrevHit = true;
 		numHearts--;
 		endGame = numHearts <= 0;
 	}
 	vec2 p = cactus.position;
-	if (p.x < -1.2f*aspectRatio) {
+	if (p.x < -1.2f*aspectRatio) 
+	{
 		cactus.SetPosition(vec2(1.2f*aspectRatio, -.32f));
 		bertPrevHit = false;
+		bertSwitch = false;
 	}
 }
 
@@ -159,7 +162,7 @@ void blinkingBert() {
 	}
 }
 
-void Display() {
+void Display(float dt) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
@@ -180,8 +183,22 @@ void Display() {
 		gameLogo.Display();
 		blinkingBert();
 	}
-	if (startedGame && !endGame)
+	if (startedGame && !endGame && !bertSwitch)
 		bertRunning.Display();
+
+	if (bertSwitch && numHearts >= 1) 
+	{
+		bertHurt.Display();
+		bertHurtDisplayTime += dt * 1000; 
+	}
+	
+	if (bertSwitch && (bertHurtDisplayTime > 20)) 
+	{ 
+		bertSwitch = false;
+		bertRunning.SetFrame(0); 
+		bertRunning.autoAnimate = true; 
+		bertHurtDisplayTime = 0; 
+	}
 
 	jumpingBert();
 
@@ -193,13 +210,18 @@ void Display() {
 		bertHit = false;
 		for (vec3 p : cactusProbes)
 			if (abs(p.z - bertRunning.z) < .05f)
+			{
 				bertHit = true;
+				bertSwitch = true;
+			}
 	}
 
 	if (endGame) {
 		gameOver.Display();
 		bertDead.Display();
 		scrolling = false;
+		bertPrevHit = false;
+		bertSwitch = false;
 		highScore = currentScore > highScore? currentScore : highScore;
 	}
 	if (startedGame && !endGame) {
@@ -226,6 +248,10 @@ void initializeBert() {
 	bertDead.Initialize(bertDeadImage, -.4f);
 	bertDead.SetScale(vec2(0.12f, 0.12f));
 	bertDead.SetPosition(vec2(-1.0f, -0.395f));
+
+	bertHurt.Initialize(bertDeterminedImage, -.4f);
+	bertHurt.SetScale(vec2(0.12f, 0.12f));
+	bertHurt.SetPosition(vec2(-1.0f, -0.395f));
 }
 
 void initSprite(Sprite &obj, string img, float z, vec2 scale, vec2 pos, bool compensateAR = true) {
@@ -268,7 +294,7 @@ int main(int ac, char** av) {
 
 	// sprites
 	clouds.Initialize(cloudsImage, 0, false);
-	initSprite(sun, sunImage, -.4f, {0.3f, 0.28f}, {0.92f, 0.82f});
+	initSprite(sun, sunImage, -.4f, {0.3f, 0.28f}, {1.77f, 0.82f});
 	//freezeClock = initSprite(freezeClock, clockImage, -.4f, 0.075f, 0.075f, 0.0f, 0.0f);
 	//bertNeutral = initSprite(bertNeutral, bertNeutralImage, -.4f, 0.12f, 0.12f, -0.5f, -0.395f);
 	//bertDetermined = initSprite(bertDetermined, bertDeterminedImage, -.4f, 0.12f, 0.12f, -0.5f, -0.395f);
@@ -284,10 +310,15 @@ int main(int ac, char** av) {
 	RegisterResize(Resize);
 	RegisterKeyboard(Keyboard);
 	// event loop
+
+	time_t prevTime = clock();
 	while (!glfwWindowShouldClose(w)) {
+		time_t currentTime = clock();
+		float dt = (float)(currentTime - prevTime) / CLOCKS_PER_SEC;
+		prevTime = currentTime;
 		ScrollClouds();
 		ScrollGround();
-		Display();
+		Display(dt);
 		UpdateStatus();
 		glfwSwapBuffers(w);
 		glfwPollEvents();
