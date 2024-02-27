@@ -43,7 +43,7 @@ vec2	heartPositions[] = { {-1.86f, 0.9f}, {-1.75f, 0.9f}, {-1.64f, 0.9f} };
 
 // gamestate
 bool	startedGame = false, scrolling = false, endGame = false;
-int		currentScore = 0, highScore = 0;
+float	currentScore = 0.0, highScore = 0.0;
 bool	bertBlinking = false;
 bool	jumping = false;
 bool	bertHit = false, bertPrevHit = false, bertSwitch = false;
@@ -63,6 +63,17 @@ vec3	cactusProbes[nCactusSensors];
 
 // misc
 float	maxJumpHeight;
+int		level = 0;
+float   levelTime = 20.0;
+int bounds[4];
+
+void levelOutput()
+{
+	bounds[0] = 25 - (5 * level);
+	bounds[1] = 30 - (5 * level);
+	bounds[2] = 45 + (5 * level);
+	bounds[3] = 0 + (5 * level);
+}
 
 // Animation
 
@@ -208,8 +219,6 @@ void Display(float dt) {
 		heart.Display();
 	}
 
-	//freezeClock.Display();
-
 	if (scrolling == false && jumping == false && startedGame)
 		scrolling = true;
 	ground.Display();
@@ -253,23 +262,46 @@ void Display(float dt) {
 			}
 	}
 
+	//freezeClock.Display();
+
+	int chance = (1 + (rand() % 100));
+	if (0 <= chance && chance < bounds[3])
+	{
+		// Extra output (150%)
+	}
+	if (bounds[3] <= chance && chance < bounds[0])
+	{
+		// No output (0%)
+	}
+	if (bounds[0] <= chance && chance < bounds[1])
+	{
+		// Half output (50%)
+	}
+	if (bounds[1] <= chance && chance < bounds[2])
+	{
+		// Regular output (100%)
+	}
+	// Regular output (100%)
+
 	if (endGame) {
 		gameOver.Display();
 		bertDead.Display();
 		scrolling = false;
 		bertPrevHit = false;
 		bertSwitch = false;
+		level = 0;
+		levelTime = 20.0;
 		highScore = currentScore > highScore? currentScore : highScore;
 	}
 	if (startedGame && !endGame) {
 		float duration = (float) (clock()-startTime)/CLOCKS_PER_SEC;
-		currentScore += (int) (duration*10);
+		currentScore += (float) (duration*0.01);
 		highScore = currentScore > highScore ? currentScore : highScore;
 	}
 
 	glDisable(GL_DEPTH_TEST);
-	Text(winWidth-550, winHeight - 50, vec3(1, 1, 1), 20, "Current Score: %i", currentScore);
-	Text(winWidth-550, winHeight - 100, vec3(1, 1, 1), 20, "High Score: %i", highScore);
+	Text(winWidth-550, winHeight - 50, vec3(1, 1, 1), 20, "Current Score: %.0f", currentScore);
+	Text(winWidth-550, winHeight - 100, vec3(1, 1, 1), 20, "High Score: %.0f", highScore);
 
 	glFlush();
 }
@@ -357,6 +389,15 @@ int main(int ac, char** av) {
 		time_t currentTime = clock();
 		float dt = (float)(currentTime - prevTime) / CLOCKS_PER_SEC;
 		prevTime = currentTime;
+
+		float elapsedTime = (float)(clock() - startTime) / CLOCKS_PER_SEC;
+		if (elapsedTime >= levelTime && level <= 5)
+		{
+			level++;
+			levelTime += 20.0;
+			levelOutput();
+		}
+
 		ScrollClouds();
 		AdjustGroundLoopDuration();
 		ScrollGround();
