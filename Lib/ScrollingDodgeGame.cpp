@@ -33,6 +33,7 @@ string	cloudsImage = "Clouds.png";
 
 // animations
 vector<string> bertNames = { bertRun1, bertRun2 };
+vector<string> bertHurts = {"Bert-determined-0.png", "Bert-determined-1.png", "Bert-determined-2.png"};
 vector<string> bertIdles = {"Bert-idle_0.png", "Bert-idle_1.png","Bert-idle_2.png", "Bert-idle_3.png", "Bert-idle_4.png"};
 
 // hearts
@@ -88,6 +89,29 @@ void ScrollGround() {
 }
 
 void jumpingBert() {
+	if (bertSwitch) {
+		if (jumping && clock() - startJump < 380) {
+			bertHurt.autoAnimate = false;
+			bertHurt.SetFrame(0);
+			float jumpHeight = (float)(clock() - startJump) * 0.002f - 0.395f;
+			maxJumpHeight = jumpHeight;
+			bertHurt.SetPosition(vec2(-1.0f, jumpHeight));
+			endJump = clock();
+		}
+		else {
+			vec2 p = bertHurt.position;
+			float jumpHeight = p.y;
+			if (clock() - endJump > 30) {
+				jumpHeight = maxJumpHeight - 0.0018f * (float)(clock() - endJump);
+				bertHurt.SetPosition(vec2(-1.0f, jumpHeight));
+			}
+			if (jumpHeight <= -0.395f) {
+				bertHurt.autoAnimate = true;
+				bertHurt.SetPosition(vec2(-1.0f, -0.395f));
+				jumping = false;
+			}
+		}
+	}
 	if (jumping && clock() - startJump < 380) {
 		bertRunning.autoAnimate = false;
 		bertRunning.SetFrame(0);
@@ -183,6 +207,9 @@ void Display(float dt) {
 		gameLogo.Display();
 		blinkingBert();
 	}
+
+	jumpingBert();
+
 	if (startedGame && !endGame && !bertSwitch)
 		bertRunning.Display();
 
@@ -192,15 +219,13 @@ void Display(float dt) {
 		bertHurtDisplayTime += dt * 1000; 
 	}
 	
-	if (bertSwitch && (bertHurtDisplayTime > 20)) 
+	if (bertSwitch && (bertHurtDisplayTime > 800)) 
 	{ 
 		bertSwitch = false;
 		bertRunning.SetFrame(0); 
 		bertRunning.autoAnimate = true; 
 		bertHurtDisplayTime = 0; 
 	}
-
-	jumpingBert();
 
 	// probe first, then display cactus
 	if (scrolling) {
@@ -249,7 +274,7 @@ void initializeBert() {
 	bertDead.SetScale(vec2(0.12f, 0.12f));
 	bertDead.SetPosition(vec2(-1.0f, -0.395f));
 
-	bertHurt.Initialize(bertDeterminedImage, -.4f);
+	bertHurt.Initialize(bertHurts, "", - .4f, 0.08f);
 	bertHurt.SetScale(vec2(0.12f, 0.12f));
 	bertHurt.SetPosition(vec2(-1.0f, -0.395f));
 }
