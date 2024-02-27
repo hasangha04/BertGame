@@ -17,11 +17,12 @@ float	aspectRatio = (float) winWidth/winHeight;
 
 // sprites
 Sprite	clouds, sun, heart, freezeClock, bertNeutral, bertRunning, bertDetermined,
-		bertDead, bertHurt, bertIdle, gameLogo, ground, cactus, gameOver;
+		bertDead, bertHurt, bertIdle, gameLogo, ground, cactus, fence, gameOver;
 
 // images
 string  gameImage = "GameOver.png", gameLogoImage = "bert-game-logo.png";
 string  cactusImage = "Cactus.png";
+string  fenceImage = "Fence.png";
 string  groundImage = "Ground.png";
 string  bertNeutralImage = "Bert-neutral.png", bertRunningImage = "Bert.gif";
 string  bertRun1 = "Bert-run1-mia.png", bertRun2 = "Bert-run2-mia.png";
@@ -70,6 +71,15 @@ void ScrollClouds() {
 	float du = dt/loopDurationClouds;
 	scrollTimeClouds = now;
 	clouds.uvTransform[0][3] += du;
+}
+
+const float minLoopDurationGround = 1.5f;
+
+void AdjustGroundLoopDuration() 
+{
+	float elapsedTime = (float)(clock() - startTime) / CLOCKS_PER_SEC;
+
+	loopDurationGround = max(minLoopDurationGround, 5.0f - elapsedTime * 0.05f);
 }
 
 void ScrollGround() {
@@ -173,6 +183,8 @@ void Display(float dt) {
 		heart.SetPosition(heartPositions[i]);
 		heart.Display();
 	}
+
+	//freezeClock.Display();
 
 	if (scrolling == false && jumping == false && startedGame)
 		scrolling = true;
@@ -295,11 +307,10 @@ int main(int ac, char** av) {
 	// sprites
 	clouds.Initialize(cloudsImage, 0, false);
 	initSprite(sun, sunImage, -.4f, {0.3f, 0.28f}, {1.77f, 0.82f});
-	//freezeClock = initSprite(freezeClock, clockImage, -.4f, 0.075f, 0.075f, 0.0f, 0.0f);
-	//bertNeutral = initSprite(bertNeutral, bertNeutralImage, -.4f, 0.12f, 0.12f, -0.5f, -0.395f);
-	//bertDetermined = initSprite(bertDetermined, bertDeterminedImage, -.4f, 0.12f, 0.12f, -0.5f, -0.395f);
+	initSprite(freezeClock, clockImage, -.4f, {0.12f, 0.12f}, {0.75f, -0.37f});
 	initSprite(ground, groundImage, -.4f, {2.0f, 0.25f}, {0.0f, -0.75f}, false);
 	initSprite(cactus, cactusImage, -.8f, {0.13f, 0.18f}, {2.5f, -0.32f});
+	initSprite(fence, fenceImage, -.8f, {0.35f, 0.15f}, {2.5f, -0.32f});
 	initSprite(gameOver, gameImage, -0.2f, {0.6f, 0.3f}, {0.0f, 0.0f});
 	initSprite(gameLogo, gameLogoImage, -0.2f, {0.6f, 0.3f}, {0.0f, 0.0f});
 	heart.Initialize(heartImage, -.4f);
@@ -317,6 +328,7 @@ int main(int ac, char** av) {
 		float dt = (float)(currentTime - prevTime) / CLOCKS_PER_SEC;
 		prevTime = currentTime;
 		ScrollClouds();
+		AdjustGroundLoopDuration();
 		ScrollGround();
 		Display(dt);
 		UpdateStatus();
