@@ -268,8 +268,8 @@ void Display(float dt) {
 	}
 
 	glDisable(GL_DEPTH_TEST);
-	Text(winWidth-500, winHeight - 50, vec3(1, 1, 1), 20, "Current Score: %i", currentScore);
-	Text(winWidth-500, winHeight - 100, vec3(1, 1, 1), 20, "High Score: %i", highScore);
+	Text(winWidth-550, winHeight - 50, vec3(1, 1, 1), 20, "Current Score: %i", currentScore);
+	Text(winWidth-550, winHeight - 100, vec3(1, 1, 1), 20, "High Score: %i", highScore);
 
 	glFlush();
 }
