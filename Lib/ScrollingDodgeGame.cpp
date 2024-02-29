@@ -54,6 +54,7 @@ time_t	bertIdleTime = clock(), bertBlinkTime = clock();
 time_t	scrollTimeClouds = clock(), scrollTimeGround = clock();
 time_t  startJump, endJump;
 time_t  bertHurtDisplayTime = 0;
+time_t spaceKeyDowntime = 0;
 float	loopDurationClouds = 60, loopDurationGround = 5;	// in seconds
 
 // probes: locations wrt cactus sprite
@@ -110,47 +111,32 @@ void ScrollGround() {
 }
 
 void jumpingBert() {
-	if (bertSwitch) {
-		if (jumping && clock() - startJump < 380) {
-			bertHurt.autoAnimate = false;
-			bertHurt.SetFrame(0);
-			float jumpHeight = (float)(clock() - startJump) * 0.002f - 0.395f;
-			maxJumpHeight = jumpHeight;
-			bertHurt.SetPosition(vec2(-1.0f, jumpHeight));
-			endJump = clock();
-		}
-		else {
-			vec2 p = bertHurt.position;
-			float jumpHeight = p.y;
-			if (clock() - endJump > 30) {
-				jumpHeight = maxJumpHeight - 0.0018f * (float)(clock() - endJump);
-				bertHurt.SetPosition(vec2(-1.0f, jumpHeight));
-			}
-			if (jumpHeight <= -0.395f) {
-				bertHurt.autoAnimate = true;
-				bertHurt.SetPosition(vec2(-1.0f, -0.395f));
-				jumping = false;
-			}
-		}
-	}
-	if (jumping && clock() - startJump < 380) {
+	float elapsedTimedown;
+	if (jumping && clock() - startJump < 380 && spaceKeyDowntime > 0) {
 		bertRunning.autoAnimate = false;
 		bertRunning.SetFrame(0);
+		bertHurt.autoAnimate = false;
+		bertHurt.SetFrame(0);
 		float jumpHeight = (float)(clock() - startJump) * 0.002f - 0.395f;
 		maxJumpHeight = jumpHeight;
 		bertRunning.SetPosition(vec2(-1.0f, jumpHeight));
+		bertHurt.SetPosition(vec2(-1.0f, jumpHeight));
 		endJump = clock();
 	}
 	else {
 		vec2 p = bertRunning.position;
+		if (bertSwitch) { p = bertHurt.position; }
 		float jumpHeight = p.y;
 		if (clock() - endJump > 30) {
 			jumpHeight = maxJumpHeight - 0.0018f * (float)(clock() - endJump);
 			bertRunning.SetPosition(vec2(-1.0f, jumpHeight));
+			bertHurt.SetPosition(vec2(-1.0f, jumpHeight));
 		}
 		if (jumpHeight <= -0.395f) {
 			bertRunning.autoAnimate = true;
 			bertRunning.SetPosition(vec2(-1.0f, -0.395f));
+			bertHurt.autoAnimate = true;
+			bertHurt.SetPosition(vec2(-1.0f, -0.395f));
 			jumping = false;
 		}
 	}
@@ -231,8 +217,9 @@ void Display(float dt) {
 
 	jumpingBert();
 
-	if (startedGame && !endGame && !bertSwitch)
+	if (startedGame && !endGame && !bertSwitch) {
 		bertRunning.Display();
+	}
 
 	if (bertSwitch && numHearts >= 1) 
 	{
@@ -295,7 +282,7 @@ void Display(float dt) {
 	}
 	if (startedGame && !endGame) {
 		float duration = (float) (clock()-startTime)/CLOCKS_PER_SEC;
-		currentScore += (float) (duration*0.01);
+		currentScore = (float) (duration*10);
 		highScore = currentScore > highScore ? currentScore : highScore;
 	}
 
@@ -337,7 +324,10 @@ void initSprite(Sprite &obj, string img, float z, vec2 scale, vec2 pos, bool com
 // Application
 
 void Keyboard(int key, bool press, bool shift, bool control) {
+	if (key == GLFW_KEY_SPACE)
+		spaceKeyDowntime = press ? clock() : 0;
 	if ((press && key == ' ') && jumping == false && (startedGame || endGame)) {
+		jumping = true;
 		if (endGame) {
 			endGame = false;
 			numHearts = 3;
@@ -345,12 +335,11 @@ void Keyboard(int key, bool press, bool shift, bool control) {
 			startTime = clock();
 			currentScore = 0;
 		}
-		jumping = true;
 		startJump = clock();
 	}
 	if ((press && key == ' ') && jumping == false && !startedGame) {
-		startedGame = true;
 		jumping = true;
+		startedGame = true;
 		startJump = clock();
 		startTime = startJump;
 	}
