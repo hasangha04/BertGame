@@ -46,7 +46,7 @@ bool	startedGame = false, scrolling = false, endGame = false;
 float	currentScore = 0.0, highScore = 0.0;
 bool	bertBlinking = false;
 bool	jumping = false;
-float	velocityUp = 0.3f, velocityDown = -0.1f, gravity = -0.05f;
+float	velocityUp = 0.3f, velocityDown = -0.0000001f, gravity = -0.05f;
 bool	bertHit = false, bertPrevHit = false, bertSwitch = false;
 
 // times
@@ -115,7 +115,7 @@ void jumpingBert() {
 	vec2 p = bertRunning.position;
 	if (bertSwitch) { p = bertHurt.position; }
 	float jumpHeight = p.y;
-	if (jumping && spaceKeyDowntime > 0 && jumpHeight >= -0.395f) {
+	if (jumping && jumpHeight >= -0.395f) {
 		bertRunning.autoAnimate = false;
 		bertRunning.SetFrame(0);
 		bertHurt.autoAnimate = false;
@@ -127,7 +127,7 @@ void jumpingBert() {
 		bertHurt.SetPosition(vec2(-1.0f, maxJumpHeight));
 		endJump = clock();
 	}
-	else {
+	else { 
 		if (jumping) {
 			float jumpTime = (float)(clock() - startJump) / CLOCKS_PER_SEC;
 			jumpHeight += velocityDown * jumpTime;
@@ -137,7 +137,7 @@ void jumpingBert() {
 		}
 		if (jumpHeight <= -0.395f) {
 			velocityUp = 0.3f;
-			velocityDown = -0.1f;
+			velocityDown = -0.0000001f;
 			maxJumpHeight = -0.395f;
 			bertRunning.autoAnimate = true;
 			bertRunning.SetPosition(vec2(-1.0f, -0.395f));
