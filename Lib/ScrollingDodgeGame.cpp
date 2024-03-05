@@ -46,6 +46,7 @@ bool	startedGame = false, scrolling = false, endGame = false;
 float	currentScore = 0.0, highScore = 0.0;
 bool	bertBlinking = false;
 bool	jumping = false;
+float	velocityUp = 0.3f, velocityDown = -0.1f, gravity = -0.05f;
 bool	bertHit = false, bertPrevHit = false, bertSwitch = false;
 
 // times
@@ -63,7 +64,7 @@ const	int nCactusSensors = sizeof(cactusSensors) / sizeof(vec2);
 vec3	cactusProbes[nCactusSensors];
 
 // misc
-float	maxJumpHeight;
+float	maxJumpHeight = -0.395f;
 int		level = 0;
 float   levelTime = 20.0;
 int bounds[4];
@@ -110,29 +111,34 @@ void ScrollGround() {
 	scrollTimeGround = now;
 }
 
-void jumpingBert() {
-	float elapsedTimedown;
-	if (jumping && clock() - startJump < 380 && spaceKeyDowntime > 0) {
+void jumpingBert() { 
+	vec2 p = bertRunning.position;
+	if (bertSwitch) { p = bertHurt.position; }
+	float jumpHeight = p.y;
+	if (jumping && spaceKeyDowntime > 0 && jumpHeight >= -0.395f) {
 		bertRunning.autoAnimate = false;
 		bertRunning.SetFrame(0);
 		bertHurt.autoAnimate = false;
 		bertHurt.SetFrame(0);
-		float jumpHeight = (float)(clock() - startJump) * 0.002f - 0.395f;
-		maxJumpHeight = jumpHeight;
-		bertRunning.SetPosition(vec2(-1.0f, jumpHeight));
-		bertHurt.SetPosition(vec2(-1.0f, jumpHeight));
+		float jumpTime = (float)(clock() - startJump) / CLOCKS_PER_SEC;
+		maxJumpHeight += velocityUp * jumpTime;
+		velocityUp += gravity * jumpTime;
+		bertRunning.SetPosition(vec2(-1.0f, maxJumpHeight));
+		bertHurt.SetPosition(vec2(-1.0f, maxJumpHeight));
 		endJump = clock();
 	}
 	else {
-		vec2 p = bertRunning.position;
-		if (bertSwitch) { p = bertHurt.position; }
-		float jumpHeight = p.y;
-		if (clock() - endJump > 30) {
-			jumpHeight = maxJumpHeight - 0.0018f * (float)(clock() - endJump);
+		if (jumping) {
+			float jumpTime = (float)(clock() - startJump) / CLOCKS_PER_SEC;
+			jumpHeight += velocityDown * jumpTime;
+			velocityDown += gravity * jumpTime;
 			bertRunning.SetPosition(vec2(-1.0f, jumpHeight));
 			bertHurt.SetPosition(vec2(-1.0f, jumpHeight));
 		}
 		if (jumpHeight <= -0.395f) {
+			velocityUp = 0.3f;
+			velocityDown = -0.1f;
+			maxJumpHeight = -0.395f;
 			bertRunning.autoAnimate = true;
 			bertRunning.SetPosition(vec2(-1.0f, -0.395f));
 			bertHurt.autoAnimate = true;
