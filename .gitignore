@@ -364,3 +364,5 @@ FodyWeavers.xsd
 /Apps/Apps.vcxproj
 /CppProperties.json
 /Lib/7-Demo-Sprite-Intersect.cpp
+/Apps/output.txt
+/Lib/PointMeasure.cpp

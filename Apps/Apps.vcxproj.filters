@@ -39,19 +39,16 @@
     <ClCompile Include="..\Lib\Quaternion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Lib\ScrollingDodgeGame.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\Lib\Widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Lib\Text.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Lib\Camera.cpp">
+    <ClCompile Include="..\Lib\Sprite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Lib\Sprite.cpp">
+    <ClCompile Include="..\Lib\ScrollingDodgeGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

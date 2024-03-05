@@ -17,13 +17,14 @@ float	aspectRatio = (float) winWidth/winHeight;
 
 // sprites
 Sprite	clouds, sun, heart, freezeClock, bertNeutral, bertRunning, bertDetermined,
-		bertDead, bertHurt, bertIdle, gameLogo, ground, cactus, fence, gameOver;
+		bertDead, bertHurt, bertIdle, gameLogo, ground, cactus, fence, bush, gameOver;
 
 // images
 string  gameImage = "GameOver.png", gameLogoImage = "bert-game-logo.png";
 string  cactusImage = "Cactus.png";
 string  fenceImage = "Fence.png";
 string  groundImage = "Ground.png";
+string  bushImage = "Bush.png";
 string  bertNeutralImage = "Bert-neutral.png", bertRunningImage = "Bert.gif";
 string  bertRun1 = "Bert-run1-mia.png", bertRun2 = "Bert-run2-mia.png";
 string  bertDeterminedImage = "Bert-determined.png", bertDeadImage = "Bert-dead.png";
@@ -47,6 +48,11 @@ float	currentScore = 0.0, highScore = 0.0;
 bool	bertBlinking = false;
 bool	jumping = false;
 bool	bertHit = false, bertPrevHit = false, bertSwitch = false;
+bool	loopedGround = false;
+int 	level = 1;
+int		levelBound = 0;
+int		chance = 0;
+int     bounds[4];
 
 // times
 time_t	startTime = clock();
@@ -54,25 +60,75 @@ time_t	bertIdleTime = clock(), bertBlinkTime = clock();
 time_t	scrollTimeClouds = clock(), scrollTimeGround = clock();
 time_t  startJump, endJump;
 time_t  bertHurtDisplayTime = 0;
-float	loopDurationClouds = 60, loopDurationGround = 5;	// in seconds
+float	loopDurationClouds = 60, loopDurationGround = 4;	// in seconds
+float   levelTime = 20.0; // Keeps track of how long a level is
+const float minLoopDurationGround = 1.5f;
 
 // probes: locations wrt cactus sprite
 vec2	cactusSensors[] = { { .9f, .3f}, { .3f, 0.9f }, { -.2f, 0.9f }, { 0.9f, 0.0f }, { -.9f, -.4f }, { -.9f, .0f } };
 const	int nCactusSensors = sizeof(cactusSensors) / sizeof(vec2);
 vec3	cactusProbes[nCactusSensors];
 
+vec2	fenceSensors[] = { {-0.99f, -0.14f}, {-0.96f, 0.31f}, {-0.72f, 0.85f}, {-0.35f, 0.84f}, {0.03f, 0.84f}, {0.40f, 0.84f}, 
+	{0.77f, 0.84f}, {0.95f, 0.31f}, {0.98f, -0.15f} };
+const	int nFenceSensors = sizeof(fenceSensors) / sizeof(vec2);
+vec3	fenceProbes[nFenceSensors];
+
+vec2	clockSensors[] = { {-0.87f, -0.67f}, {-0.85f, -0.47f}, {-0.86f, -0.23f}, {-0.87f, 0.15f}, {-0.98f, 0.36f}, {-0.84f, 0.52f}, 
+	{-0.66f, 0.60f}, {-0.35f, 0.74f}, {-0.25f, 0.84f}, {0.01f, 0.84f}, {0.26f, 0.83f}, {0.34f, 0.75f}, {0.63f, 0.60f}, {0.85f, 0.52f}, 
+	{0.96f, 0.38f}, {0.85f, 0.15f}, {0.85f, -0.23f} };
+const	int nClockSensors = sizeof(clockSensors) / sizeof(vec2);
+vec3	clockProbes[nClockSensors];
+
+vec2	bushSensors[] = { {-0.97f, -0.63f}, {-0.98f, -0.20f}, {-0.92f, 0.02f}, {-0.88f, 0.10f}, {-0.82f, 0.22f}, {-0.47f, 0.32f},  
+	{-0.38f, 0.51f}, {-0.31f, 0.63f}, {-0.21f, 0.75f}, {-0.11f, 0.83f}, {0.11f, 0.83f}, {0.22f, 0.72f}, {0.31f, 0.61f}, {0.37f, 0.52f}, 
+	{0.43f, 0.40f}, {0.47f, 0.31f}, {0.53f, 0.01f}, {0.61f, 0.01f}, {0.78f, -0.00f}, {0.89f, -0.11f}, {0.94f, -0.22f}, {0.98f, -0.31f} };
+const	int nBushSensors = sizeof(bushSensors) / sizeof(vec2);
+vec3	bushProbes[nBushSensors];
+
 // misc
 float	maxJumpHeight;
-int		level = 0;
-float   levelTime = 20.0;
-int bounds[4];
+
+// Level Selection
 
 void levelOutput()
 {
-	bounds[0] = 25 - (5 * level);
-	bounds[1] = 30 - (5 * level);
-	bounds[2] = 45 + (5 * level);
-	bounds[3] = 0 + (5 * level);
+	bounds[0] = 25 - (5 * levelBound);
+	bounds[1] = 30 - (5 * levelBound);
+	bounds[2] = 45 + (5 * levelBound);
+	bounds[3] = 0 + (5 * levelBound);
+}
+
+int chanceOutput(int chance)
+{
+	if (scrolling)
+	{
+		// Level 1: Display cactus
+		if (chance >= 0 && chance < bounds[0])
+		{
+			return 1;
+		}
+		// Level 2: Display cactus and bush
+		else if (chance >= bounds[0] && chance < bounds[1])
+		{
+			return 2;
+		}
+		// Level 3: Display cactus, bush, and fence
+		else if (chance >= bounds[1] && chance < bounds[2])
+		{
+			return 3;
+		}
+		// Level 4: Display cactus, bush, and fence closer together
+		else if (chance >= bounds[2] && chance <= bounds[3])
+		{
+			return 4;
+		}
+		// Do the same as Level 1
+		else
+		{
+			return 2;
+		}
+	}
 }
 
 // Animation
@@ -84,8 +140,6 @@ void ScrollClouds() {
 	scrollTimeClouds = now;
 	clouds.uvTransform[0][3] += du;
 }
-
-const float minLoopDurationGround = 1.5f;
 
 void AdjustGroundLoopDuration() 
 {
@@ -100,11 +154,17 @@ void ScrollGround() {
 		float dt = (float)(now - scrollTimeGround) / CLOCKS_PER_SEC;
 		float du = dt/loopDurationGround;
 		ground.uvTransform[0][3] += du;
-		// move cactus to keep pace with ground
+		// move sprites to keep pace with ground
 		cactus.position.x -= 2 * du * ground.scale.x * aspectRatio;
-			// position in +/-1 space, but u is in 0,1, so scale by 2
-			// also scale by ground scale and aspect ratio
+		fence.position.x -= 2 * du * ground.scale.x * aspectRatio;
+		bush.position.x -= 2 * du * ground.scale.x * aspectRatio;
+		freezeClock.position.x -= 2 * du * ground.scale.x * aspectRatio;
+		// position in +/-1 space, but u is in 0,1, so scale by 2
+		// also scale by ground scale and aspect ratio
 		cactus.UpdateTransform();
+		fence.UpdateTransform();
+		bush.UpdateTransform();
+		freezeClock.UpdateTransform();
 	}
 	scrollTimeGround = now;
 }
@@ -165,12 +225,72 @@ void UpdateStatus()
 		numHearts--;
 		endGame = numHearts <= 0;
 	}
-	vec2 p = cactus.position;
-	if (p.x < -1.2f*aspectRatio) 
+
+	vec2 c = cactus.position;
+	vec2 b = bush.position;
+	vec2 f = fence.position;
+
+	switch (level) 
 	{
-		cactus.SetPosition(vec2(1.2f*aspectRatio, -.32f));
-		bertPrevHit = false;
-		bertSwitch = false;
+		case 1:
+			if (c.x < -1.0f * aspectRatio) 
+			{
+			}
+			else 
+			{
+				break;
+			}
+		case 2:
+			if (b.x >= -1.0f * aspectRatio)
+			{
+				break;
+			}
+		case 3:
+		case 4:
+			if (f.x >= -1.0f * aspectRatio)
+			{
+				break;
+			}
+			chance = 1 + (rand() % 100);
+			level = chanceOutput(chance);
+			loopedGround = true;
+			break;
+	}
+
+	if (loopedGround)
+	{
+		switch (level)
+		{
+			case 1:
+				cactus.SetPosition(vec2(1.2f * aspectRatio, -.32f));
+				bertPrevHit = false;
+				bertSwitch = false;
+				loopedGround = false;
+				break;
+			case 2:
+				cactus.SetPosition(vec2(1.2f * aspectRatio, -.32f));
+				bush.SetPosition(vec2(1.8f * aspectRatio, -.42f));
+				bertPrevHit = false;
+				bertSwitch = false;
+				loopedGround = false;
+				break;
+			case 3:
+				cactus.SetPosition(vec2(1.2f * aspectRatio, -.32f));
+				bush.SetPosition(vec2(1.8f * aspectRatio, -.42f));
+				fence.SetPosition(vec2(2.5f * aspectRatio, -.36f));
+				bertPrevHit = false;
+				bertSwitch = false;
+				loopedGround = false;
+				break;
+			case 4:
+				cactus.SetPosition(vec2(1.2f * aspectRatio, -.32f));
+				bush.SetPosition(vec2(1.7f * aspectRatio, -.42f));
+				fence.SetPosition(vec2(2.2f * aspectRatio, -.36f));
+				bertPrevHit = false;
+				bertSwitch = false;
+				loopedGround = false;
+				break;
+		}
 	}
 }
 
@@ -207,6 +327,102 @@ void blinkingBert() {
 	}
 }
 
+void displayCactus()
+{
+	for (int i = 0; i < nCactusSensors; i++)
+	{
+	    cactusProbes[i] = Probe(cactusSensors[i], cactus.ptTransform);
+	}
+	cactus.Display();
+	bertHit = false;
+	for (vec3 p : cactusProbes)
+	{
+		if (abs(p.z - bertRunning.z) < .05f)
+		{
+			bertHit = true;
+			bertSwitch = true;
+		}
+	}
+}
+
+void displayCactusBush()
+{
+	for (int i = 0; i < nCactusSensors; i++)
+	{
+		cactusProbes[i] = Probe(cactusSensors[i], cactus.ptTransform);
+	}
+	cactus.Display();
+	bertHit = false;
+	for (vec3 p : cactusProbes)
+	{
+		if (abs(p.z - bertRunning.z) < .05f)
+		{
+			bertHit = true;
+			bertSwitch = true;
+		}
+	}	
+
+	for (int i = 0; i < nBushSensors; i++)
+	{
+		bushProbes[i] = Probe(bushSensors[i], bush.ptTransform);
+	}
+	bush.Display();
+	for (vec3 u : bushProbes)
+	{
+		if (abs(u.z - bertRunning.z) < .05f)
+		{
+			bertHit = true;
+			bertSwitch = true;
+		}
+	}
+}
+
+void displayCactusBushFence()
+{
+	for (int i = 0; i < nCactusSensors; i++)
+	{
+		cactusProbes[i] = Probe(cactusSensors[i], cactus.ptTransform);
+	}
+	cactus.Display();
+	bertHit = false;
+	for (vec3 p : cactusProbes)
+	{
+		if (abs(p.z - bertRunning.z) < .05f)
+		{
+			bertHit = true;
+			bertSwitch = true;
+		}
+	}
+
+	for (int i = 0; i < nBushSensors; i++)
+	{
+		bushProbes[i] = Probe(bushSensors[i], bush.ptTransform);
+	}
+	bush.Display();
+	for (vec3 u : bushProbes)
+	{
+		if (abs(u.z - bertRunning.z) < .05f)
+		{
+			bertHit = true;
+			bertSwitch = true;
+		}
+	}
+
+	for (int i = 0; i < nFenceSensors; i++)
+	{
+		fenceProbes[i] = Probe(fenceSensors[i], fence.ptTransform);
+	}
+	fence.Display();
+	for (vec3 q : fenceProbes)
+	{
+		if (abs(q.z - bertRunning.z) < .05f)
+		{
+			bertHit = true;
+			bertSwitch = true;
+		}
+	}
+}
+
 void Display(float dt) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -237,7 +453,7 @@ void Display(float dt) {
 	if (bertSwitch && numHearts >= 1) 
 	{
 		bertHurt.Display();
-		bertHurtDisplayTime += dt * 1000; 
+		bertHurtDisplayTime += (time_t) dt * 1000; 
 	}
 	
 	if (bertSwitch && (bertHurtDisplayTime > 800)) 
@@ -248,40 +464,23 @@ void Display(float dt) {
 		bertHurtDisplayTime = 0; 
 	}
 
-	// probe first, then display cactus
-	if (scrolling) {
-		for (int i = 0; i < nCactusSensors; i++)
-			cactusProbes[i] = Probe(cactusSensors[i], cactus.ptTransform);
-		cactus.Display();
-		bertHit = false;
-		for (vec3 p : cactusProbes)
-			if (abs(p.z - bertRunning.z) < .05f)
-			{
-				bertHit = true;
-				bertSwitch = true;
-			}
-	}
-
 	//freezeClock.Display();
-
-	int chance = (1 + (rand() % 100));
-	if (0 <= chance && chance < bounds[3])
+	
+	switch (level)
 	{
-		// Extra output (150%)
+		case 1:
+			displayCactus();
+			break;
+		case 2:
+			displayCactusBush();
+			break;
+		case 3:
+			displayCactusBushFence();
+			break;
+		case 4:
+			displayCactusBushFence();
+			break;
 	}
-	if (bounds[3] <= chance && chance < bounds[0])
-	{
-		// No output (0%)
-	}
-	if (bounds[0] <= chance && chance < bounds[1])
-	{
-		// Half output (50%)
-	}
-	if (bounds[1] <= chance && chance < bounds[2])
-	{
-		// Regular output (100%)
-	}
-	// Regular output (100%)
 
 	if (endGame) {
 		gameOver.Display();
@@ -289,8 +488,11 @@ void Display(float dt) {
 		scrolling = false;
 		bertPrevHit = false;
 		bertSwitch = false;
-		level = 0;
+		loopedGround = false;
+		levelBound = 0;
 		levelTime = 20.0;
+		chance = 0;
+		level = 1;
 		highScore = currentScore > highScore? currentScore : highScore;
 	}
 	if (startedGame && !endGame) {
@@ -342,6 +544,10 @@ void Keyboard(int key, bool press, bool shift, bool control) {
 			endGame = false;
 			numHearts = 3;
 			cactus.SetPosition(vec2(1.2f*aspectRatio, -0.32f));
+			fence.SetPosition(vec2(1.5f*aspectRatio, -0.36f));
+			level = 1;
+			levelBound = 0;
+			levelTime = 20.0;
 			startTime = clock();
 			currentScore = 0;
 		}
@@ -363,6 +569,9 @@ void Resize(int width, int height) {
 }
 
 int main(int ac, char** av) {
+	// Ensures random chance variable for every run 
+	srand(time(NULL));
+
 	// init app window and GL context
 	GLFWwindow* w = InitGLFW(100, 100, winWidth, winHeight, "BertGame");
 
@@ -372,12 +581,14 @@ int main(int ac, char** av) {
 	initSprite(freezeClock, clockImage, -.4f, {0.12f, 0.12f}, {0.75f, -0.37f});
 	initSprite(ground, groundImage, -.4f, {2.0f, 0.25f}, {0.0f, -0.75f}, false);
 	initSprite(cactus, cactusImage, -.8f, {0.13f, 0.18f}, {2.5f, -0.32f});
-	initSprite(fence, fenceImage, -.8f, {0.35f, 0.15f}, {2.5f, -0.32f});
+	initSprite(fence, fenceImage, -.8f, {0.35f, 0.15f}, {2.9f, -0.36f});
+	initSprite(bush, bushImage, -.8f, { 0.22f, 0.083f }, { 2.7f, -0.42f });
 	initSprite(gameOver, gameImage, -0.2f, {0.6f, 0.3f}, {0.0f, 0.0f});
 	initSprite(gameLogo, gameLogoImage, -0.2f, {0.6f, 0.3f}, {0.0f, 0.0f});
 	heart.Initialize(heartImage, -.4f);
 	heart.SetScale(vec2(.05f, .05f));
 	initializeBert();
+	levelOutput();
 
 	// callbacks
 	RegisterResize(Resize);
@@ -391,15 +602,15 @@ int main(int ac, char** av) {
 		prevTime = currentTime;
 
 		float elapsedTime = (float)(clock() - startTime) / CLOCKS_PER_SEC;
-		if (elapsedTime >= levelTime && level <= 5)
+		if (elapsedTime >= levelTime && levelBound <= 4)
 		{
-			level++;
+			levelBound++;
 			levelTime += 20.0;
 			levelOutput();
 		}
 
 		ScrollClouds();
-		AdjustGroundLoopDuration();
+		//AdjustGroundLoopDuration();
 		ScrollGround();
 		Display(dt);
 		UpdateStatus();
