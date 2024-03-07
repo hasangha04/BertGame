@@ -61,7 +61,7 @@ int		levelBound = 0;
 int		chance = 0;
 int     bounds[4];
 int		levels[] = { 1, 0, 0 };
-int numObstacles = 1;
+int     numObstacles = 1;
 
 // times
 time_t	startTime = clock();
@@ -325,7 +325,7 @@ void displayCactus(int index)
 {
 	for (int i = 0; i < nCactusSensors; i++)
 	{
-		//cactusProbes[i] = Probe(cactusSensors[i], cacti[index].ptTransform);
+		cactusProbes[i] = Probe(cactusSensors[i], cacti[index].ptTransform);
 	}
 	cacti[index].Display();
 	bertHit = false;
@@ -343,9 +343,10 @@ void displayBush(int index)
 {
 	for (int i = 0; i < nBushSensors; i++)
 	{
-		//bushProbes[i] = Probe(bushSensors[i], bushes[index].ptTransform);
+		bushProbes[i] = Probe(bushSensors[i], bushes[index].ptTransform);
 	}
 	bushes[index].Display();
+	bertHit = false;
 	for (vec3 u : bushProbes)
 	{
 		if (abs(u.z - bertRunning.z) < .05f)
@@ -360,9 +361,10 @@ void displayFence(int index)
 {
 	for (int i = 0; i < nFenceSensors; i++)
 	{
-		//fenceProbes[i] = Probe(fenceSensors[i], fences[index].ptTransform);
+		fenceProbes[i] = Probe(fenceSensors[i], fences[index].ptTransform);
 	}
 	fences[index].Display();
+	bertHit = false;
 	for (vec3 q : fenceProbes)
 	{
 		if (abs(q.z - bertRunning.z) < .05f)
@@ -453,6 +455,8 @@ void Display(float dt) {
 			startClock = clock();
 		}
 	}
+
+	// Checks clock usage in order to reset when freeze effect is over
 	if (clockUsed)
 	{
 		float elapsedTime = (float)(clock() - startClock) / CLOCKS_PER_SEC;
@@ -539,9 +543,12 @@ void Keyboard(int key, bool press, bool shift, bool control) {
 		if (endGame) {
 			endGame = false;
 			numHearts = 3;
-			/*cactus.SetPosition(vec2(1.2f * aspectRatio, -0.32f));
-			bush.SetPosition(vec2(1.2f * aspectRatio, -0.32f));
-			fence.SetPosition(vec2(1.5f*aspectRatio, -0.36f));*/
+			for (int i = 0; i < 3; i++)
+			{
+				cacti[i].SetPosition(vec2(2.5f, -0.32f));
+				fences[i].SetPosition(vec2(2.9f, -0.36f));
+				bushes[i].SetPosition(vec2(2.7f, -0.42f));
+			}
 			level = 1;
 			levelBound = 0;
 			levelTime = 20.0;
