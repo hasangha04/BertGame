@@ -54,6 +54,7 @@ bool	jumping = false;
 float	velocityUp = 0.3f, velocityDown = 0.0f, gravity = -0.05f;
 bool	bertHit = false, bertPrevHit = false, bertSwitch = false;
 bool	loopedGround = false;
+bool    clockUsed = false;
 int 	level = 1;
 int		levelBound = 0;
 int		chance = 0;
@@ -63,14 +64,18 @@ int numObstacles = 1;
 
 // times
 time_t	startTime = clock();
+time_t	startClock = clock();
 time_t	bertIdleTime = clock(), bertBlinkTime = clock();
 time_t	scrollTimeClouds = clock(), scrollTimeGround = clock();
 time_t  startJump;
 time_t  bertHurtDisplayTime = 0;
+time_t  spaceKeyDowntime = 0;
+float   minLoopDurationGround = 1.5f;
 float   levelTime = 20.0; // Keeps track of how long a level is
 const float minLoopDurationGround = 1.5f;
 time_t spaceKeyDowntime = 0;
 float	loopDurationClouds = 60, loopDurationGround = 3;	// in seconds
+int     oldTime = 0;
 
 // probes: locations wrt cactus sprite
 vec2	cactusSensors[] = { { .9f, .3f}, { .3f, 0.9f }, { -.2f, 0.9f }, { 0.9f, 0.0f }, { -.9f, -.4f }, { -.9f, .0f } };
@@ -82,17 +87,17 @@ vec2	fenceSensors[] = { {-0.99f, -0.14f}, {-0.96f, 0.31f}, {-0.72f, 0.85f}, {-0.
 const	int nFenceSensors = sizeof(fenceSensors) / sizeof(vec2);
 vec3	fenceProbes[nFenceSensors];
 
-vec2	clockSensors[] = { {-0.87f, -0.67f}, {-0.85f, -0.47f}, {-0.86f, -0.23f}, {-0.87f, 0.15f}, {-0.98f, 0.36f}, {-0.84f, 0.52f}, 
-	{-0.66f, 0.60f}, {-0.35f, 0.74f}, {-0.25f, 0.84f}, {0.01f, 0.84f}, {0.26f, 0.83f}, {0.34f, 0.75f}, {0.63f, 0.60f}, {0.85f, 0.52f}, 
-	{0.96f, 0.38f}, {0.85f, 0.15f}, {0.85f, -0.23f} };
-const	int nClockSensors = sizeof(clockSensors) / sizeof(vec2);
-vec3	clockProbes[nClockSensors];
-
 vec2	bushSensors[] = { {-0.97f, -0.63f}, {-0.98f, -0.20f}, {-0.92f, 0.02f}, {-0.88f, 0.10f}, {-0.82f, 0.22f}, {-0.47f, 0.32f},  
 	{-0.38f, 0.51f}, {-0.31f, 0.63f}, {-0.21f, 0.75f}, {-0.11f, 0.83f}, {0.11f, 0.83f}, {0.22f, 0.72f}, {0.31f, 0.61f}, {0.37f, 0.52f}, 
 	{0.43f, 0.40f}, {0.47f, 0.31f}, {0.53f, 0.01f}, {0.61f, 0.01f}, {0.78f, -0.00f}, {0.89f, -0.11f}, {0.94f, -0.22f}, {0.98f, -0.31f} };
 const	int nBushSensors = sizeof(bushSensors) / sizeof(vec2);
 vec3	bushProbes[nBushSensors];
+
+vec2	clockSensors[] = { {-0.87f, -0.67f}, {-0.85f, -0.47f}, {-0.86f, -0.23f}, {-0.87f, 0.15f}, {-0.98f, 0.36f}, {-0.84f, 0.52f},
+	{-0.66f, 0.60f}, {-0.35f, 0.74f}, {-0.25f, 0.84f}, {0.01f, 0.84f}, {0.26f, 0.83f}, {0.34f, 0.75f}, {0.63f, 0.60f}, {0.85f, 0.52f},
+	{0.96f, 0.38f}, {0.85f, 0.15f}, {0.85f, -0.23f} };
+const	int nClockSensors = sizeof(clockSensors) / sizeof(vec2);
+vec3	clockProbes[nClockSensors];
 
 // misc
 float	maxJumpHeight;
@@ -258,6 +263,12 @@ void UpdateStatus() {
 	else if (levels[numObstacles - 1] == 3) {
 		lastObstacle = fences[numObstacles - 1].position;
 	}
+	vec2 fc = freezeClock.position;
+	
+	if (fc.x < -1.0f * aspectRatio && levelBound >= 3)
+	{
+		freezeClock.SetPosition(vec2(1.75f * aspectRatio, -0.37f));
+	}
 
 	if (lastObstacle.x <= -1.2f * aspectRatio) {
 		loopedGround = true;
@@ -363,6 +374,22 @@ void displayFence(int index)
 	}
 }
 
+void displayClock()
+{
+	for (int i = 0; i < nClockSensors; i++)
+	{
+		clockProbes[i] = Probe(clockSensors[i], freezeClock.ptTransform);
+	}
+	freezeClock.Display();
+	for (vec3 p : clockProbes)
+	{
+		if (abs(p.z - bertRunning.z) < .05f)
+		{
+			clockUsed = true;
+		}
+	}
+}
+
 void Display(float dt) {
 	glEnable(GL_BLEND);
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -416,6 +443,23 @@ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
 		else if (levels[i] == 3) {
 			displayFence(i);
+		}
+	}
+
+	if (levelBound >= 3 && !clockUsed)
+	{
+		displayClock();
+		oldTime = loopDurationGround;
+		loopDurationGround = 3.5;
+		startClock = clock();
+	}
+	if (clockUsed)
+	{
+		float elapsedTime = (float)(clock() - startClock) / CLOCKS_PER_SEC;
+		if (elapsedTime > 10.0)
+		{
+			loopDurationGround = oldTime;
+			clockUsed = false;
 		}
 	}
 
@@ -518,7 +562,7 @@ int main(int ac, char** av) {
 	// sprites
 	clouds.Initialize(cloudsImage, 0, false);
 	initSprite(sun, sunImage, -.4f, {0.3f, 0.28f}, {1.77f, 0.82f});
-	initSprite(freezeClock, clockImage, -.4f, {0.12f, 0.12f}, {0.75f, -0.37f});
+	initSprite(freezeClock, clockImage, -.8f, {0.12f, 0.12f}, {1.75f, -0.37f});
 	initSprite(ground, groundImage, -.4f, {2.0f, 0.25f}, {0.0f, -0.75f}, false);
 	for (int i = 0; i < 3; i++) {
 		initSprite(cacti[i], cactusImage, -.8f, {0.13f, 0.18f}, {2.5f, -0.32f});
@@ -547,12 +591,16 @@ int main(int ac, char** av) {
 		if (elapsedTime >= levelTime && levelBound <= 4)
 		{
 			levelBound++;
+			cout << levelBound << endl;
 			levelTime += 20.0;
 			levelOutput();
 		}
 
 		ScrollClouds();
-		AdjustGroundLoopDuration();
+		/*if (!clockUsed)
+		{
+			AdjustGroundLoopDuration();
+		}*/
 		ScrollGround();
 		Display(dt);
 		UpdateStatus();
