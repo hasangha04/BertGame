@@ -215,6 +215,7 @@ void GenerateObstacles(int numObstacles) {
 		levels[i] = level;
 		cout << level << endl;
 	}
+	int clockLocation = 1 + (rand() % 3);
 	for (int i = 0; i < numObstacles; i++) {
 		float minDistance = 2.5f * (1 / loopDurationGround);
 		float maxDistance = 6.0f * (1 / loopDurationGround);
@@ -239,6 +240,11 @@ void GenerateObstacles(int numObstacles) {
 			bertSwitch = false;
 			loopedGround = false;
 			break;
+		}
+		vec2 fc = freezeClock.position;
+		if (fc.x < -1.0f * aspectRatio && levelBound >= 3 && levels[i] == clockLocation)
+		{
+			freezeClock.SetPosition(vec2((lastDistance + distance + 0.5f) * aspectRatio, -0.37f));
 		}
 		lastDistance += distance;
 	}
@@ -432,8 +438,6 @@ void Display(float dt) {
 		bertRunning.autoAnimate = true;
 		bertHurtDisplayTime = 0;
 	}
-
-	//freezeClock.Display();
 
 	for (int i = 0; i < 3; i++) {
 		if (levels[i] == 1) {
