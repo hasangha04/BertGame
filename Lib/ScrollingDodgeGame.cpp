@@ -208,12 +208,10 @@ void jumpingBert() {
 
 void GenerateObstacles(int numObstacles) {
 	float lastDistance = 0.0f;
-	cout << "New obstacles: " << endl;
 	for (int i = 0; i < numObstacles; i++) {
 		chance = 1 + (rand() % 100);
 		level = chanceOutput(chance);
 		levels[i] = level;
-		cout << level << endl;
 	}
 	int clockLocation = 1 + (rand() % 3);
 	for (int i = 0; i < numObstacles; i++) {
@@ -244,7 +242,7 @@ void GenerateObstacles(int numObstacles) {
 		vec2 fc = freezeClock.position;
 		if (fc.x < -1.0f * aspectRatio && levelBound >= 3 && levels[i] == clockLocation)
 		{
-			freezeClock.SetPosition(vec2((lastDistance + distance + 0.5f) * aspectRatio, -0.37f));
+			freezeClock.SetPosition(vec2((lastDistance + distance + 0.8f) * aspectRatio, -0.37f));
 		}
 		lastDistance += distance;
 	}
@@ -327,7 +325,7 @@ void displayCactus(int index)
 {
 	for (int i = 0; i < nCactusSensors; i++)
 	{
-		//cactusProbes[i] = Probe(cactusSensors[i], cactus.ptTransform);
+		//cactusProbes[i] = Probe(cactusSensors[i], cacti[index].ptTransform);
 	}
 	cacti[index].Display();
 	bertHit = false;
@@ -345,7 +343,7 @@ void displayBush(int index)
 {
 	for (int i = 0; i < nBushSensors; i++)
 	{
-		//bushProbes[i] = Probe(bushSensors[i], bush.ptTransform);
+		//bushProbes[i] = Probe(bushSensors[i], bushes[index].ptTransform);
 	}
 	bushes[index].Display();
 	for (vec3 u : bushProbes)
@@ -362,7 +360,7 @@ void displayFence(int index)
 {
 	for (int i = 0; i < nFenceSensors; i++)
 	{
-		//fenceProbes[i] = Probe(fenceSensors[i], fence.ptTransform);
+		//fenceProbes[i] = Probe(fenceSensors[i], fences[index].ptTransform);
 	}
 	fences[index].Display();
 	for (vec3 q : fenceProbes)
@@ -605,7 +603,6 @@ int main(int ac, char** av) {
 		if (elapsedTime >= levelTime && levelBound <= 4)
 		{
 			levelBound++;
-			cout << levelBound << endl;
 			levelTime += 20.0;
 			levelOutput();
 		}
