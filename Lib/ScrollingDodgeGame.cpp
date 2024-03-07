@@ -240,7 +240,7 @@ void GenerateObstacles(int numObstacles) {
 			loopedGround = false;
 			break;
 		}
-		lastDistance = distance;
+		lastDistance += distance;
 	}
 }
 
@@ -284,6 +284,7 @@ void UpdateStatus() {
 			GenerateObstacles(numObstacles);
 		}
 		else {
+			numObstacles = 1;
 			GenerateObstacles(1);
 		}
 	}
