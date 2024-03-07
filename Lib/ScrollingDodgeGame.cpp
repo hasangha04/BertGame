@@ -216,25 +216,25 @@ void GenerateObstacles(int numObstacles) {
 		cout << level << endl;
 	}
 	for (int i = 0; i < numObstacles; i++) {
-		float minDistance = 5.0f * (1 / loopDurationGround);
-		float maxDistance = 8.0f * (1 / loopDurationGround);
+		float minDistance = 2.5f * (1 / loopDurationGround);
+		float maxDistance = 6.0f * (1 / loopDurationGround);
 		float distanceRatio = (rand() % 100);
 		float distance = minDistance + (distanceRatio / 100) * (maxDistance - minDistance);
 		switch (levels[i]) {
 		case 1:
-			cacti[i].SetPosition(vec2(lastDistance + distance * aspectRatio, -.32f));
+			cacti[i].SetPosition(vec2((lastDistance + distance)* aspectRatio, -.32f));
 			bertPrevHit = false;
 			bertSwitch = false;
 			loopedGround = false;
 			break;
 		case 2:
-			bushes[i].SetPosition(vec2(lastDistance + distance * aspectRatio, -.42f));
+			bushes[i].SetPosition(vec2((lastDistance + distance) * aspectRatio, -.42f));
 			bertPrevHit = false;
 			bertSwitch = false;
 			loopedGround = false;
 			break;
 		case 3:
-			fences[i].SetPosition(vec2(3.0f + lastDistance + distance * aspectRatio, -.36f));
+			fences[i].SetPosition(vec2((lastDistance + distance) * aspectRatio, -.36f));
 			bertPrevHit = false;
 			bertSwitch = false;
 			loopedGround = false;
@@ -453,7 +453,7 @@ void Display(float dt) {
 		if (clockUsed)
 		{
 			oldTime = loopDurationGround;
-			loopDurationGround = 3.5;
+			loopDurationGround = 2.5;
 			startClock = clock();
 		}
 	}
@@ -462,7 +462,7 @@ void Display(float dt) {
 		float elapsedTime = (float)(clock() - startClock) / CLOCKS_PER_SEC;
 		if (elapsedTime > 10.0)
 		{
-			loopDurationGround = oldTime;
+			loopDurationGround = oldTime + 1.5;
 			clockUsed = false;
 			clockCoolDown = true;
 			coolDown = clock();
@@ -613,10 +613,10 @@ int main(int ac, char** av) {
 		}
 
 		ScrollClouds();
-		/*if (!clockUsed)
+		if (!clockUsed)
 		{
 			AdjustGroundLoopDuration();
-		}*/
+		}
 		ScrollGround();
 		Display(dt);
 		UpdateStatus();
