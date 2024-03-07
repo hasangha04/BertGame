@@ -13,12 +13,12 @@
 
 // window
 int		winWidth = 1522, winHeight = 790;
-float	aspectRatio = (float) winWidth/winHeight;
+float	aspectRatio = (float)winWidth / winHeight;
 
 // sprites
 Sprite	clouds, sun, heart, freezeClock, bertNeutral, bertRunning, bertDetermined,
-		bertDead, bertHurt, bertIdle, gameLogo, ground, cactus1, cactus2, cactus3, 
-		fence1, fence2, fence3, bush1, bush2, bush3, gameOver;
+bertDead, bertHurt, bertIdle, gameLogo, ground, cactus1, cactus2, cactus3,
+fence1, fence2, fence3, bush1, bush2, bush3, gameOver;
 
 // images
 string  gameImage = "GameOver.png", gameLogoImage = "bert-game-logo.png";
@@ -33,18 +33,18 @@ string  sunImage = "Sun.png";
 string	cloudsImage = "Clouds.png";
 
 // animations
-vector<string> bertNames = {"Bert-run1-mia.png", "Bert-run2-mia.png"};
-vector<string> bertHurts = {"Bert-determined-0.png", "Bert-determined-1.png", "Bert-determined-2.png"};
-vector<string> bertIdles = {"Bert-idle_0.png", "Bert-idle_1.png","Bert-idle_2.png", "Bert-idle_3.png", "Bert-idle_4.png"};
+vector<string> bertNames = { "Bert-run1-mia.png", "Bert-run2-mia.png" };
+vector<string> bertHurts = { "Bert-determined-0.png", "Bert-determined-1.png", "Bert-determined-2.png" };
+vector<string> bertIdles = { "Bert-idle_0.png", "Bert-idle_1.png","Bert-idle_2.png", "Bert-idle_3.png", "Bert-idle_4.png" };
 
 // hearts
 int		numHearts = 3;
 vec2	heartPositions[] = { {-1.86f, 0.9f}, {-1.75f, 0.9f}, {-1.64f, 0.9f} };
 
 // obstacles
-Sprite cacti[3] = {cactus1, cactus2, cactus3};
-Sprite bushes[3] = {bush1, bush2, bush3};
-Sprite fences[3] = {fence1, fence2, fence3};
+Sprite cacti[3] = { cactus1, cactus2, cactus3 };
+Sprite bushes[3] = { bush1, bush2, bush3 };
+Sprite fences[3] = { fence1, fence2, fence3 };
 
 // gamestate
 bool	startedGame = false, scrolling = false, endGame = false;
@@ -55,11 +55,12 @@ float	velocityUp = 0.3f, velocityDown = 0.0f, gravity = -0.05f;
 bool	bertHit = false, bertPrevHit = false, bertSwitch = false;
 bool	loopedGround = false;
 bool    clockUsed = false;
+bool    clockCoolDown = false;
 int 	level = 1;
 int		levelBound = 0;
 int		chance = 0;
 int     bounds[4];
-int		levels[] = {1, 0, 0};
+int		levels[] = { 1, 0, 0 };
 int numObstacles = 1;
 
 // times
@@ -70,10 +71,9 @@ time_t	scrollTimeClouds = clock(), scrollTimeGround = clock();
 time_t  startJump;
 time_t  bertHurtDisplayTime = 0;
 time_t  spaceKeyDowntime = 0;
+time_t  coolDown = 0;
 float   minLoopDurationGround = 1.5f;
 float   levelTime = 20.0; // Keeps track of how long a level is
-const float minLoopDurationGround = 1.5f;
-time_t spaceKeyDowntime = 0;
 float	loopDurationClouds = 60, loopDurationGround = 3;	// in seconds
 int     oldTime = 0;
 
@@ -82,13 +82,13 @@ vec2	cactusSensors[] = { { .9f, .3f}, { .3f, 0.9f }, { -.2f, 0.9f }, { 0.9f, 0.0
 const	int nCactusSensors = sizeof(cactusSensors) / sizeof(vec2);
 vec3	cactusProbes[nCactusSensors];
 
-vec2	fenceSensors[] = { {-0.99f, -0.14f}, {-0.96f, 0.31f}, {-0.72f, 0.85f}, {-0.35f, 0.84f}, {0.03f, 0.84f}, {0.40f, 0.84f}, 
+vec2	fenceSensors[] = { {-0.99f, -0.14f}, {-0.96f, 0.31f}, {-0.72f, 0.85f}, {-0.35f, 0.84f}, {0.03f, 0.84f}, {0.40f, 0.84f},
 	{0.77f, 0.84f}, {0.95f, 0.31f}, {0.98f, -0.15f} };
 const	int nFenceSensors = sizeof(fenceSensors) / sizeof(vec2);
 vec3	fenceProbes[nFenceSensors];
 
-vec2	bushSensors[] = { {-0.97f, -0.63f}, {-0.98f, -0.20f}, {-0.92f, 0.02f}, {-0.88f, 0.10f}, {-0.82f, 0.22f}, {-0.47f, 0.32f},  
-	{-0.38f, 0.51f}, {-0.31f, 0.63f}, {-0.21f, 0.75f}, {-0.11f, 0.83f}, {0.11f, 0.83f}, {0.22f, 0.72f}, {0.31f, 0.61f}, {0.37f, 0.52f}, 
+vec2	bushSensors[] = { {-0.97f, -0.63f}, {-0.98f, -0.20f}, {-0.92f, 0.02f}, {-0.88f, 0.10f}, {-0.82f, 0.22f}, {-0.47f, 0.32f},
+	{-0.38f, 0.51f}, {-0.31f, 0.63f}, {-0.21f, 0.75f}, {-0.11f, 0.83f}, {0.11f, 0.83f}, {0.22f, 0.72f}, {0.31f, 0.61f}, {0.37f, 0.52f},
 	{0.43f, 0.40f}, {0.47f, 0.31f}, {0.53f, 0.01f}, {0.61f, 0.01f}, {0.78f, -0.00f}, {0.89f, -0.11f}, {0.94f, -0.22f}, {0.98f, -0.31f} };
 const	int nBushSensors = sizeof(bushSensors) / sizeof(vec2);
 vec3	bushProbes[nBushSensors];
@@ -136,12 +136,12 @@ int chanceOutput(int chance) {
 void ScrollClouds() {
 	time_t now = clock();
 	float dt = (float)(now - scrollTimeClouds) / CLOCKS_PER_SEC;
-	float du = dt/loopDurationClouds;
+	float du = dt / loopDurationClouds;
 	scrollTimeClouds = now;
 	clouds.uvTransform[0][3] += du;
 }
 
-void AdjustGroundLoopDuration() 
+void AdjustGroundLoopDuration()
 {
 	float elapsedTime = (float)(clock() - startTime) / CLOCKS_PER_SEC;
 
@@ -152,7 +152,7 @@ void ScrollGround() {
 	time_t now = clock();
 	if (scrolling) {
 		float dt = (float)(now - scrollTimeGround) / CLOCKS_PER_SEC;
-		float du = dt/loopDurationGround;
+		float du = dt / loopDurationGround;
 		ground.uvTransform[0][3] += du;
 		for (int i = 0; i < 3; i++) {
 			cacti[i].position.x -= 2 * du * ground.scale.x * aspectRatio;
@@ -168,7 +168,7 @@ void ScrollGround() {
 	scrollTimeGround = now;
 }
 
-void jumpingBert() { 
+void jumpingBert() {
 	vec2 p = bertRunning.position;
 	if (bertSwitch) { p = bertHurt.position; }
 	float jumpHeight = p.y;
@@ -183,7 +183,7 @@ void jumpingBert() {
 		bertRunning.SetPosition(vec2(-1.0f, maxJumpHeight));
 		bertHurt.SetPosition(vec2(-1.0f, maxJumpHeight));
 	}
-	else { 
+	else {
 		if (jumping) {
 			float jumpTime = (float)(clock() - startJump) / CLOCKS_PER_SEC;
 			jumpHeight += velocityDown * jumpTime;
@@ -222,7 +222,7 @@ void GenerateObstacles(int numObstacles) {
 		float distance = minDistance + (distanceRatio / 100) * (maxDistance - minDistance);
 		switch (levels[i]) {
 		case 1:
-			cacti[i].SetPosition(vec2(lastDistance + distance* aspectRatio, -.32f));
+			cacti[i].SetPosition(vec2(lastDistance + distance * aspectRatio, -.32f));
 			bertPrevHit = false;
 			bertSwitch = false;
 			loopedGround = false;
@@ -264,7 +264,7 @@ void UpdateStatus() {
 		lastObstacle = fences[numObstacles - 1].position;
 	}
 	vec2 fc = freezeClock.position;
-	
+
 	if (fc.x < -1.0f * aspectRatio && levelBound >= 3)
 	{
 		freezeClock.SetPosition(vec2(1.75f * aspectRatio, -0.37f));
@@ -327,7 +327,7 @@ void displayCactus(int index)
 {
 	for (int i = 0; i < nCactusSensors; i++)
 	{
-	    //cactusProbes[i] = Probe(cactusSensors[i], cactus.ptTransform);
+		//cactusProbes[i] = Probe(cactusSensors[i], cactus.ptTransform);
 	}
 	cacti[index].Display();
 	bertHit = false;
@@ -393,7 +393,7 @@ void displayClock()
 
 void Display(float dt) {
 	glEnable(GL_BLEND);
-glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	clouds.Display();
@@ -419,18 +419,18 @@ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		bertRunning.Display();
 	}
 
-	if (bertSwitch && numHearts >= 1) 
+	if (bertSwitch && numHearts >= 1)
 	{
 		bertHurt.Display();
-		bertHurtDisplayTime += (time_t) dt * 1000; 
+		bertHurtDisplayTime += (time_t)dt * 1000;
 	}
-	
-	if (bertSwitch && (bertHurtDisplayTime > 800)) 
-	{ 
+
+	if (bertSwitch && (bertHurtDisplayTime > 800))
+	{
 		bertSwitch = false;
-		bertRunning.SetFrame(0); 
-		bertRunning.autoAnimate = true; 
-		bertHurtDisplayTime = 0; 
+		bertRunning.SetFrame(0);
+		bertRunning.autoAnimate = true;
+		bertHurtDisplayTime = 0;
 	}
 
 	//freezeClock.Display();
@@ -447,12 +447,15 @@ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
 	}
 
-	if (levelBound >= 3 && !clockUsed)
+	if (levelBound >= 3 && !clockUsed && !clockCoolDown)
 	{
 		displayClock();
-		oldTime = loopDurationGround;
-		loopDurationGround = 3.5;
-		startClock = clock();
+		if (clockUsed)
+		{
+			oldTime = loopDurationGround;
+			loopDurationGround = 3.5;
+			startClock = clock();
+		}
 	}
 	if (clockUsed)
 	{
@@ -461,6 +464,18 @@ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		{
 			loopDurationGround = oldTime;
 			clockUsed = false;
+			clockCoolDown = true;
+			coolDown = clock();
+		}
+	}
+
+	// Puts freeze clock on a cool down of 30 seconds before it can be used again
+	if (clockCoolDown)
+	{
+		float coolDownTime = (float)(clock() - startClock) / CLOCKS_PER_SEC;
+		if (coolDownTime > 30.0)
+		{
+			clockCoolDown = false;
 		}
 	}
 
@@ -475,17 +490,17 @@ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		levelTime = 20.0;
 		chance = 0;
 		level = 1;
-		highScore = currentScore > highScore? currentScore : highScore;
+		highScore = currentScore > highScore ? currentScore : highScore;
 	}
 	if (startedGame && !endGame) {
-		float duration = (float) (clock()-startTime)/CLOCKS_PER_SEC;
-		currentScore = (float) (duration*10);
+		float duration = (float)(clock() - startTime) / CLOCKS_PER_SEC;
+		currentScore = (float)(duration * 10);
 		highScore = currentScore > highScore ? currentScore : highScore;
 	}
 
 	glDisable(GL_DEPTH_TEST);
-	Text(winWidth-550, winHeight - 50, vec3(1, 1, 1), 20, "Current Score: %.0f", currentScore);
-	Text(winWidth-550, winHeight - 100, vec3(1, 1, 1), 20, "High Score: %.0f", highScore);
+	Text(winWidth - 550, winHeight - 50, vec3(1, 1, 1), 20, "Current Score: %.0f", currentScore);
+	Text(winWidth - 550, winHeight - 100, vec3(1, 1, 1), 20, "High Score: %.0f", highScore);
 
 	glFlush();
 }
@@ -507,12 +522,12 @@ void initializeBert() {
 	bertDead.SetScale(vec2(0.12f, 0.12f));
 	bertDead.SetPosition(vec2(-1.0f, -0.395f));
 
-	bertHurt.Initialize(bertHurts, "", - .4f, 0.08f);
+	bertHurt.Initialize(bertHurts, "", -.4f, 0.08f);
 	bertHurt.SetScale(vec2(0.12f, 0.12f));
 	bertHurt.SetPosition(vec2(-1.0f, -0.395f));
 }
 
-void initSprite(Sprite &obj, string img, float z, vec2 scale, vec2 pos, bool compensateAR = true) {
+void initSprite(Sprite& obj, string img, float z, vec2 scale, vec2 pos, bool compensateAR = true) {
 	obj.Initialize(img, z, compensateAR);
 	obj.SetScale(scale);
 	obj.SetPosition(pos);
@@ -549,7 +564,7 @@ void Keyboard(int key, bool press, bool shift, bool control) {
 
 void Resize(int width, int height) {
 	glViewport(0, 0, width, height);
-	aspectRatio = (float) width/height;
+	aspectRatio = (float)width / height;
 	sun.UpdateTransform();
 }
 
@@ -562,16 +577,16 @@ int main(int ac, char** av) {
 
 	// sprites
 	clouds.Initialize(cloudsImage, 0, false);
-	initSprite(sun, sunImage, -.4f, {0.3f, 0.28f}, {1.77f, 0.82f});
-	initSprite(freezeClock, clockImage, -.8f, {0.12f, 0.12f}, {1.75f, -0.37f});
-	initSprite(ground, groundImage, -.4f, {2.0f, 0.25f}, {0.0f, -0.75f}, false);
+	initSprite(sun, sunImage, -.4f, { 0.3f, 0.28f }, { 1.77f, 0.82f });
+	initSprite(freezeClock, clockImage, -.8f, { 0.12f, 0.12f }, { 1.75f, -0.37f });
+	initSprite(ground, groundImage, -.4f, { 2.0f, 0.25f }, { 0.0f, -0.75f }, false);
 	for (int i = 0; i < 3; i++) {
-		initSprite(cacti[i], cactusImage, -.8f, {0.13f, 0.18f}, {2.5f, -0.32f});
-		initSprite(fences[i], fenceImage, -.8f, {0.35f, 0.15f}, {2.9f, -0.36f});
-		initSprite(bushes[i], bushImage, -.8f, {0.22f, 0.083f}, {2.7f, -0.42f});
+		initSprite(cacti[i], cactusImage, -.8f, { 0.13f, 0.18f }, { 2.5f, -0.32f });
+		initSprite(fences[i], fenceImage, -.8f, { 0.35f, 0.15f }, { 2.9f, -0.36f });
+		initSprite(bushes[i], bushImage, -.8f, { 0.22f, 0.083f }, { 2.7f, -0.42f });
 	}
-	initSprite(gameOver, gameImage, -0.2f, {0.6f, 0.3f}, {0.0f, 0.0f});
-	initSprite(gameLogo, gameLogoImage, -0.2f, {0.6f, 0.3f}, {0.0f, 0.0f});
+	initSprite(gameOver, gameImage, -0.2f, { 0.6f, 0.3f }, { 0.0f, 0.0f });
+	initSprite(gameLogo, gameLogoImage, -0.2f, { 0.6f, 0.3f }, { 0.0f, 0.0f });
 	heart.Initialize(heartImage, -.4f);
 	heart.SetScale(vec2(.05f, .05f));
 	initializeBert();
