@@ -269,12 +269,6 @@ void UpdateStatus() {
 	else if (levels[numObstacles - 1] == 3) {
 		lastObstacle = fences[numObstacles - 1].position;
 	}
-	vec2 fc = freezeClock.position;
-
-	if (fc.x < -1.0f * aspectRatio && levelBound >= 3)
-	{
-		freezeClock.SetPosition(vec2(1.75f * aspectRatio, -0.37f));
-	}
 
 	if (lastObstacle.x <= -1.2f * aspectRatio) {
 		loopedGround = true;
